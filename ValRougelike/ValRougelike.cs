@@ -3,15 +3,15 @@ using Jotunn.Entities;
 using Jotunn.Managers;
 using Jotunn.Utils;
 
-namespace JotunnModStub
+namespace ValRougelike
 {
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [BepInDependency(Jotunn.Main.ModGuid)]
-    //[NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
-    internal class JotunnModStub : BaseUnityPlugin
+    [NetworkCompatibility(CompatibilityLevel.ClientMustHaveMod, VersionStrictness.Minor)]
+    internal class ValRougelike : BaseUnityPlugin
     {
         public const string PluginGUID = "com.jotunn.jotunnmodstub";
-        public const string PluginName = "JotunnModStub";
+        public const string PluginName = "ValRougelike";
         public const string PluginVersion = "0.0.1";
         
         // Use this class to add your own localization to the game
