@@ -15,7 +15,12 @@ public static class TombstoneChanges
     {
         private static void Prefix(Player __instance)
         {
+            // These items have priority because they are being used
             __instance.m_inventory.GetEquippedItems();
+            
+            // Equipment items are handled differently than resources etc
+            __instance.m_inventory.GetAllItems().GetEquipment();
+            
         }
     }
 }

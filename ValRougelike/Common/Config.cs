@@ -6,6 +6,7 @@ public class Config
 {
     public static ConfigFile cfg;
     public static ConfigEntry<bool> EnableDebugMode;
+    public static ConfigEntry<float> DeathSkillPerLevelBonus;
     public Config(ConfigFile Config)
     {
         // ensure all the config values are created
@@ -18,6 +19,7 @@ public class Config
     // Create Configuration and load it.
     private void CreateConfigValues(ConfigFile Config)
     {
+        DeathSkillPerLevelBonus = BindServerConfig("DeathProgression","DeathSkillPerLevelBonus",1f,"How impactful death skill progression is. This impacts how much each level improves your skill and item retention.", false, 0f, 10f);
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
             new ConfigDescription("Enables Debug logging for Valheim Armory.",

@@ -59,7 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\Config.cs" />
+    <Compile Include="Death\DeathProgressionSkill.cs" />
     <Compile Include="Death\TombstoneChanges.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
     <Compile Include="ValRougelike.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
