@@ -25,4 +25,9 @@ public static class Extensions
     {
         return list.Where(x => EquipmentTypes.Contains(x.m_shared.m_itemType) ).ToList();
     }
+    
+    public static List<ItemDrop.ItemData> GetNotEquipment(this List<ItemDrop.ItemData> list)
+    {
+        return list.Where(x => !EquipmentTypes.Contains(x.m_shared.m_itemType) ).ToList();
+    }
 }

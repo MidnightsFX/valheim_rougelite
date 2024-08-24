@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Jotunn.Configs;
 using Jotunn.Managers;
 using UnityEngine;
+using ValRougelike.Common;
 
 namespace ValRougelike.Death;
 
@@ -29,7 +30,7 @@ public static class DeathProgressionSkill
         if (Player.m_localPlayer != null)
         {
             float player_skill_level = Player.m_localPlayer.GetSkillFactor(DeathSkill);
-            
+            percentage += player_skill_level * ValConfig.DeathSkillPerLevelBonus.Value;
         }
         
         percentage += bonus;

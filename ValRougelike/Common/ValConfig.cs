@@ -2,12 +2,12 @@
 
 namespace ValRougelike.Common;
 
-public class Config
+public class ValConfig
 {
     public static ConfigFile cfg;
     public static ConfigEntry<bool> EnableDebugMode;
     public static ConfigEntry<float> DeathSkillPerLevelBonus;
-    public Config(ConfigFile Config)
+    public ValConfig(ConfigFile Config)
     {
         // ensure all the config values are created
         cfg = Config;

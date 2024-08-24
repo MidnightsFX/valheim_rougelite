@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System.Collections.Generic;
+using HarmonyLib;
 
 namespace ValRougelike.Death;
 
@@ -15,11 +16,14 @@ public static class TombstoneChanges
     {
         private static void Prefix(Player __instance)
         {
-            // These items have priority because they are being used
-            __instance.m_inventory.GetEquippedItems();
+            List<ItemDrop.ItemData> player_items = __instance.m_inventory.GetAllItems();
+            int number_of_items_savable = (int)(player_items.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
             
             // Equipment items are handled differently than resources etc
-            __instance.m_inventory.GetAllItems().GetEquipment();
+            player_items.GetEquipment();
+            
+            // Get non-equipment this is where we want the majority of our death penalty to go
+            player_items.GetNotEquipment();
             
         }
     }
