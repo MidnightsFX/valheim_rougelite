@@ -1,4 +1,6 @@
-﻿using BepInEx;
+﻿using System;
+using System.Collections.Generic;
+using BepInEx;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Jotunn.Utils;
@@ -29,6 +31,32 @@ namespace ValRougelike
             
             // To learn more about Jotunn's features, go to
             // https://valheim-modding.github.io/Jotunn/tutorials/overview.html
+        }
+        
+        /// <summary>
+        /// Fisher-Yates style list sort for string lists.
+        /// </summary>
+        /// <param name="inputList"></param>
+        /// <returns></returns>
+        public static List<T> shuffleList<T>(List<T> inputList)
+        {    //take any list of GameObjects and return it with Fischer-Yates shuffle
+            int i = 0;
+            int t = inputList.Count;
+            int r = 0;
+            T p = default(T);
+            List<T> tempList = new List<T>();
+            tempList.AddRange(inputList);
+
+            while (i < t)
+            {
+                r = UnityEngine.Random.Range(i, tempList.Count);
+                p = tempList[i];
+                tempList[i] = tempList[r];
+                tempList[r] = p;
+                i++;
+            }
+
+            return tempList;
         }
     }
 }

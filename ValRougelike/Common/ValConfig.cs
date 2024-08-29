@@ -7,6 +7,10 @@ public class ValConfig
     public static ConfigFile cfg;
     public static ConfigEntry<bool> EnableDebugMode;
     public static ConfigEntry<float> DeathSkillPerLevelBonus;
+    public static ConfigEntry<float> MaxPercentEquipmentRetainedOnDeath;
+    public static ConfigEntry<float> MaxPercentResourcesRetainedOnDeath;
+    public static ConfigEntry<float> MaxPercentTotalItemsRetainedOnDeath;
+    
     public ValConfig(ConfigFile Config)
     {
         // ensure all the config values are created
@@ -20,6 +24,11 @@ public class ValConfig
     private void CreateConfigValues(ConfigFile Config)
     {
         DeathSkillPerLevelBonus = BindServerConfig("DeathProgression","DeathSkillPerLevelBonus",1f,"How impactful death skill progression is. This impacts how much each level improves your skill and item retention.", false, 0f, 10f);
+        MaxPercentEquipmentRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentEquipmentRetainedOnDeath",100f,"The maximum amount of Equipment that can be retained on death, depends on players individual skill.", true, 0f, 100f);
+        MaxPercentResourcesRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentResourcesRetainedOnDeath",20f,"The maximum amount of Resources that can be retained on death, depends on players individual skill.", true, 0f, 100f);
+        MaxPercentTotalItemsRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentTotalItemsRetainedOnDeath",20f,"The maximum amount of total items that can be retained on death, depends on players individual skill.", true, 0f, 100f);
+        
+        
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
             new ConfigDescription("Enables Debug logging for Valheim Armory.",
