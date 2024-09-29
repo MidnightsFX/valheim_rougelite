@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="Common\ValConfig.cs" />
     <Compile Include="Death\DeathProgressionSkill.cs" />
+    <Compile Include="Death\SkillsChanges.cs" />
     <Compile Include="Death\TombstoneChanges.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
@@ -115,10 +116,15 @@
     <Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -ValheimPath &quot;$(VALHEIM_INSTALL.TrimEnd('\'))&quot; -DeployPath &quot;$(MOD_DEPLOYPATH.TrimEnd('\'))&quot; -ProjectPath &quot;$(ProjectDir.TrimEnd('\'))&quot; " />
     <CallTarget Targets="CopyToUnity" Condition="Exists('$(UNITY_FOLDER)')" />
   </Target>
+  <Target Name="CopyToThunderstore">
+    <Message Text="Copying to Thunderstore Deployment" Importance="high" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="C:/Users/carls/AppData/Roaming/Thunderstore Mod Manager/DataFolder/Valheim/profiles/modtesting/BepInEx/plugins" />
+  </Target>
   <PropertyGroup>
     <BuildDependsOn>
       $(BuildDependsOn);
-      JotunnPostBuildTaskWin
+      JotunnPostBuildTaskWin;
+      CopyToThunderstore
     </BuildDependsOn>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

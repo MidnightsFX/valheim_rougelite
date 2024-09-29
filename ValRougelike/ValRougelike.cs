@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using BepInEx;
+using HarmonyLib;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Jotunn.Utils;
@@ -27,6 +29,9 @@ namespace ValRougelike
         {
             cfg = new ValConfig(Config);
             // Jotunn comes with its own Logger class to provide a consistent Log style for all mods using it
+
+            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
+            
             Jotunn.Logger.LogInfo("ModStub has landed");
             
             // To learn more about Jotunn's features, go to

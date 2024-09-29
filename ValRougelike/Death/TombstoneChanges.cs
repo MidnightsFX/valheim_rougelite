@@ -1,74 +1,123 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
+using UnityEngine;
 using ValRougelike.Common;
 
 namespace ValRougelike.Death;
 
 public static class TombstoneChanges
 {
-    [HarmonyPatch(typeof(Player), nameof(Player.OnDeath))]
-    static class OnDeath__Patch
-    {
-        
-    }
-    
     [HarmonyPatch(typeof(Player), nameof(Player.CreateTombStone))]
     static class OnDeath_Tombstone_Patch
     {
-        private static void Prefix(Player __instance)
+        private static bool Prefix(Player __instance)
         {
-            List<ItemDrop.ItemData> saved_items = new List<ItemDrop.ItemData>();
-            List<ItemDrop.ItemData> player_items = __instance.m_inventory.GetAllItems();
-            int number_of_items_savable = (int)(player_items.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
+            List<ItemDrop.ItemData> savedItems = new List<ItemDrop.ItemData>();
+            List<ItemDrop.ItemData> playerItems = __instance.m_inventory.GetAllItems();
+            List<ItemDrop.ItemData> playerNonSkillCheckItems = new List<ItemDrop.ItemData>();
+            List<ItemDrop.ItemData> playerItemsWithoutNonSkillCheckedItems = new List<ItemDrop.ItemData>();
 
-            if (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value > ((float)number_of_items_savable / player_items.Count))
+            string[] nonSkillCheckedItems = ValConfig.ItemsNotSkillChecked.Value.Split(',');
+            foreach (ItemDrop.ItemData item in playerItems)
             {
-                number_of_items_savable = (int)(player_items.Count * ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value);
+                if (nonSkillCheckedItems.Contains(item.m_shared.m_name))
+                {
+                    playerNonSkillCheckItems.Add(item);
+                } else {
+                    playerItemsWithoutNonSkillCheckedItems.Add(item);
+                }
+            }
+            int numberOfItemsSavable = (int)(playerItems.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
+            Jotunn.Logger.LogDebug($"Player number of items {playerItems.Count}, savable due to skill {numberOfItemsSavable}");
+            if (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value > ((float)numberOfItemsSavable / playerItems.Count))
+            {
+                numberOfItemsSavable = (int)(playerItems.Count * ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value);
+                Jotunn.Logger.LogDebug($"Number of items savable reduced due to configured max ({ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value}) now: {numberOfItemsSavable}");
             }
             
             // Equipment items are handled differently than resources etc
-            List<ItemDrop.ItemData> player_equipment = player_items.GetEquipment();
-            if (player_equipment.Count <= number_of_items_savable)
+            List<ItemDrop.ItemData> playerEquipment = playerItemsWithoutNonSkillCheckedItems.GetEquipment();
+            if (playerEquipment.Count <= numberOfItemsSavable)
             {
-                // we arnt adding these to the saved items because we just delete unequipped items
-                // saved_items.AddRange(player_equipment);
-                number_of_items_savable -= player_equipment.Count;
+                // we have enough items savable to save all equipment
+                // we'll reduce the number of items we save from our potential savable poolsize
+                // savedItems.AddRange(playerEquipment);
+                numberOfItemsSavable -= playerEquipment.Count;
             } else
             {
-                player_equipment = ValRougelike.shuffleList(player_items);
-                foreach (var equipment in player_equipment)
+                // we do not have enough to save all equipped items
+                // first we shuffle the equipment, so we do not delete the same items each death
+                playerEquipment = ValRougelike.shuffleList(playerItemsWithoutNonSkillCheckedItems);
+                foreach (var equipment in playerEquipment)
                 {
-                    if (number_of_items_savable > 0)
+                    if (numberOfItemsSavable > 0)
                     {
-                        number_of_items_savable -= 1;
+                        numberOfItemsSavable -= 1;
                         continue;
                     }
                     __instance.UnequipItem(equipment);
                 }
-                // we saved as much equipment as we could, everything else is lost
+                // we saved as much equipment as we could, everything else will be lost
                 __instance.m_inventory.RemoveUnequipped();
-                return;
-                // shuffle and save as much equipment as we can
+                return false;
             }
-
-            if (number_of_items_savable > 0)
+            
+            // we still have savable space after saving any equipped items
+            if (numberOfItemsSavable > 0)
             {
-                List<ItemDrop.ItemData> non_equip_items = ValRougelike.shuffleList(player_items.GetNotEquipment());
-                foreach (var item in non_equip_items)
+                // shuffle inventory items that are not equipment
+                List<ItemDrop.ItemData> nonEquippableItems = ValRougelike.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetNotEquipment());
+                foreach (var item in nonEquippableItems)
                 {
-                    for (int i = 0; i < number_of_items_savable; i++)
+                    if (numberOfItemsSavable > 0)
                     {
-                        if (i > non_equip_items.Count) { break; } // ensure there are still items to save, likely not needed
-                        saved_items.Add(item);
+                        savedItems.Add(item);
+                        numberOfItemsSavable -= 1;
                     }
+                    else
+                    {
+                        break;
+                    }
+                    
                 }
             }
+            
+            // Empty the inventory, we already have everything that is getting saved copied off.
             __instance.m_inventory.RemoveUnequipped();
-            foreach (var item in saved_items)
+            
+            // Handle items that are defined in the non-skill-checked section
+            // we do this right after clearing the inventory to allow creating a tombstone from the empty inventory (which can just contain our non-skill handled items)
+            switch (ValConfig.ItemsNotSkillCheckedAction.Value)
+            {
+                case "DropOnDeath":
+                    foreach (var item in playerNonSkillCheckItems)
+                    {
+                        // might need to check if we actually can add the item here
+                        __instance.m_inventory.AddItem(item);
+                    }
+                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(__instance.m_tombstone, __instance.GetCenterPoint(), __instance.transform.rotation);
+                    gameObject.GetComponent<Container>().GetInventory().MoveInventoryToGrave(__instance.m_inventory);
+                    TombStone component = gameObject.GetComponent<TombStone>();
+                    PlayerProfile playerProfile = Game.instance.GetPlayerProfile();
+                    string name = playerProfile.GetName();
+                    long playerId = playerProfile.GetPlayerID();
+                    component.Setup(name, playerId);
+                    break;
+                case "AlwaysDestroy":
+                    // we do nothing, these items will be destroyed
+                    break;
+                case "AlwaysSave":
+                    savedItems.AddRange(playerNonSkillCheckItems);
+                    break;
+            }
+            foreach (var item in savedItems)
             {
                 // might need to check if we actually can add the item here
                 __instance.m_inventory.AddItem(item);
             }
+
+            return false;
         }
     }
 }

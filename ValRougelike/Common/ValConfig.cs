@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using System;
+using BepInEx.Configuration;
 
 namespace ValRougelike.Common;
 
@@ -6,10 +7,13 @@ public class ValConfig
 {
     public static ConfigFile cfg;
     public static ConfigEntry<bool> EnableDebugMode;
+    public static ConfigEntry<string> ItemsNotSkillCheckedAction;
+    public static ConfigEntry<string> ItemsNotSkillChecked;
     public static ConfigEntry<float> DeathSkillPerLevelBonus;
     public static ConfigEntry<float> MaxPercentEquipmentRetainedOnDeath;
     public static ConfigEntry<float> MaxPercentResourcesRetainedOnDeath;
     public static ConfigEntry<float> MaxPercentTotalItemsRetainedOnDeath;
+    public static ConfigEntry<float> GainedSkillLossFactor;
     
     public ValConfig(ConfigFile Config)
     {
@@ -27,7 +31,12 @@ public class ValConfig
         MaxPercentEquipmentRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentEquipmentRetainedOnDeath",100f,"The maximum amount of Equipment that can be retained on death, depends on players individual skill.", true, 0f, 100f);
         MaxPercentResourcesRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentResourcesRetainedOnDeath",20f,"The maximum amount of Resources that can be retained on death, depends on players individual skill.", true, 0f, 100f);
         MaxPercentTotalItemsRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentTotalItemsRetainedOnDeath",20f,"The maximum amount of total items that can be retained on death, depends on players individual skill.", true, 0f, 100f);
-        
+        GainedSkillLossFactor = BindServerConfig("SkillLossModifiers", "GainedSkillLossFactor", 0.2f, "The percentage of gained skills that are lost when dying.", false, 0f, 1f);
+
+        ItemsNotSkillChecked = BindServerConfig("DeathProgression", "ItemsNotSkillChecked", "Tin,TinOre,Copper,CopperOre,CopperScrap,Bronze,Iron,IronScrap,Silver,SilverOre,DragonEgg,chest_hildir1,chest_hildir2,chest_hildir3,BlackMetal,BlackMetalScrap,DvergrNeedle,MechanicalSpring,FlametalNew,FlametalOreNew", "List of items that are not rolled to be saved through death progression.");
+        ItemsNotSkillCheckedAction = BindServerConfig("DeathProgression", "ItemsNotSkillCheckedAction", "dropOnDeath", 
+            "What happens to non-teleportable items. DropOnDeath = placed into a tombstone on death, AlwaysDestroy = never saved, AlwaysSave = These items are never destroyed and do not count towards save limits.", 
+            new AcceptableValueList<string>("DropOnDeath", "AlwaysDestroy", "AlwaysSave"));
         
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
@@ -44,13 +53,14 @@ public class ValConfig
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <param name="description"></param>
+    /// <param name="acceptableValues"></param>>
     /// <param name="advanced"></param>
     /// <returns></returns>
-    public static ConfigEntry<bool> BindServerConfig(string catagory, string key, bool value, string description, bool advanced = false)
+    public static ConfigEntry<bool> BindServerConfig(string catagory, string key, bool value, string description, AcceptableValueBase acceptableValues = null, bool advanced = false)
     {
         return cfg.Bind(catagory, key, value,
             new ConfigDescription(description,
-            null,
+                acceptableValues,
             new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
             );
     }
@@ -107,10 +117,12 @@ public class ValConfig
     /// <param name="description"></param>
     /// <param name="advanced"></param>
     /// <returns></returns>
-    public static ConfigEntry<string> BindServerConfig(string catagory, string key, string value, string description, bool advanced = false)
+    public static ConfigEntry<string> BindServerConfig(string catagory, string key, string value, string description, AcceptableValueList<string> acceptableValues = null, bool advanced = false)
     {
         return cfg.Bind(catagory, key, value,
-            new ConfigDescription(description, null,
+            new ConfigDescription(
+                description,
+                acceptableValues,
             new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
             );
     }
