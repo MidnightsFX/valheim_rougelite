@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <EmbeddedResource Include="AssetsEmbedded\deathless" />
     <None Include="packages.config" />
     <None Include="README.md" />
   </ItemGroup>
@@ -120,6 +121,7 @@
   <Target Name="CopyToThunderstore">
     <Message Text="Copying to Thunderstore Deployment" Importance="high" />
     <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="C:/Users/carls/AppData/Roaming/Thunderstore Mod Manager/DataFolder/Valheim/profiles/modtesting/BepInEx/plugins" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="C:/Users/carls/AppData/Roaming/com.kesomannen.gale/valheim/profiles/Modtest/BepInEx/plugins" />
   </Target>
   <PropertyGroup>
     <BuildDependsOn>
@@ -127,6 +129,10 @@
       JotunnPostBuildTaskWin;
       CopyToThunderstore
     </BuildDependsOn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>xcopy "C:\Users\carls\Documents\projects\Valheim_Stuff\Unity_Valheim_mod_data\JotunnModUnity\AssetBundles\StandaloneWindows\deathless" "$(ProjectDir)AssetsEmbedded\deathless" /q /y /i
+</PreBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
