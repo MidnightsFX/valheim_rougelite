@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\DataObjects.cs" />
     <Compile Include="Common\ValConfig.cs" />
     <Compile Include="Death\DeathProgressionSkill.cs" />
     <Compile Include="Death\SkillsChanges.cs" />

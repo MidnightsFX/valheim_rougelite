@@ -32,7 +32,7 @@ namespace ValRougelike
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
             
-            Jotunn.Logger.LogInfo("ModStub has landed");
+            Jotunn.Logger.LogInfo("Death is not the end.");
             
             // To learn more about Jotunn's features, go to
             // https://valheim-modding.github.io/Jotunn/tutorials/overview.html

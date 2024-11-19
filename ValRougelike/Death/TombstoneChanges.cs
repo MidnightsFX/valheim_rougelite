@@ -28,7 +28,7 @@ public static class TombstoneChanges
                     playerItemsWithoutNonSkillCheckedItems.Add(item);
                 }
             }
-            int numberOfItemsSavable = (int)(playerItems.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
+            int numberOfItemsSavable = (int)(playerItems.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus()) + ValConfig.MinimumEquipmentRetainedOnDeath.Value;
             Jotunn.Logger.LogDebug($"Player number of items {playerItems.Count}, savable due to skill {numberOfItemsSavable}");
             if (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value > ((float)numberOfItemsSavable / playerItems.Count))
             {
@@ -68,12 +68,14 @@ public static class TombstoneChanges
             {
                 // shuffle inventory items that are not equipment
                 List<ItemDrop.ItemData> nonEquippableItems = ValRougelike.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetNotEquipment());
+                int max_number_resources_savable = (int)(ValConfig.MaxPercentResourcesRetainedOnDeath.Value * nonEquippableItems.Count);
                 foreach (var item in nonEquippableItems)
                 {
-                    if (numberOfItemsSavable > 0)
+                    if (numberOfItemsSavable > 0 && max_number_resources_savable > 0)
                     {
                         savedItems.Add(item);
                         numberOfItemsSavable -= 1;
+                        max_number_resources_savable -= 1;
                     }
                     else
                     {

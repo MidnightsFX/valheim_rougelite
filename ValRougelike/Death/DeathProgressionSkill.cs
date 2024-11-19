@@ -3,6 +3,7 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using Jotunn.Configs;
 using Jotunn.Managers;
+using Mono.Math.Prime.Generator;
 using UnityEngine;
 using ValRougelike.Common;
 
@@ -13,6 +14,12 @@ public static class DeathProgressionSkill
     public static Skills.SkillType DeathSkill = SetupDeathSkill();
     private static float lastSkillIncreaseTickTime = 0f;
     private static readonly float increaseSkillInterval = 15f;
+    private static float _bossKills = 0f;
+    private static float _enemykills = 0f;
+    private static float _piecesBuilt = 0f;
+    private static float _mineAmount = 0f;
+    private static float _treesChopped = 0f;
+    private static float _craftAndUpgrades = 0f;
     public static Skills.SkillType SetupDeathSkill()
     {
         SkillConfig deathskill = new SkillConfig();
@@ -44,16 +51,47 @@ public static class DeathProgressionSkill
     {
         public static void Postfix(Player __instance)
         {
-            if (Player.m_localPlayer == __instance)
+            // Player.m_localPlayer == __instance
+            if (true)
             {
                 float fdt = Time.fixedDeltaTime;
                 if (lastSkillIncreaseTickTime == 0f)
                 {
                     lastSkillIncreaseTickTime = fdt + increaseSkillInterval;
                 }
-
+                Jotunn.Logger.LogDebug($"DeathSkill increase interval check: {fdt} > {lastSkillIncreaseTickTime}");
                 if (fdt > lastSkillIncreaseTickTime)
                 {
+                    PlayerProfile profile = Game.instance.GetPlayerProfile();
+                    float bkillstat = profile.m_playerStats.m_stats[PlayerStatType.BossKills];
+                    float killstat = profile.m_playerStats.m_stats[PlayerStatType.EnemyKills];
+                    float builtpieces = profile.m_playerStats.m_stats[PlayerStatType.Builds];
+                    float treesChopped = profile.m_playerStats.m_stats[PlayerStatType.TreeChops];
+                    float miningAmount = profile.m_playerStats.m_stats[PlayerStatType.Mines];
+                    float craftAndUpgrade = profile.m_playerStats.m_stats[PlayerStatType.CraftsOrUpgrades];
+                    if (bkillstat > _bossKills || killstat > _enemykills || builtpieces > _piecesBuilt || treesChopped > _treesChopped || miningAmount > _mineAmount || craftAndUpgrade > _craftAndUpgrades)
+                    {
+                        // Update the stat and provide a bonus based on boss kills and/or kills
+                        if (bkillstat > _bossKills)
+                        {
+                            float bosskillxp = (_bossKills - bkillstat) * ValConfig.SkillGainOnBossKills.Value;
+                            float killxp = (_enemykills - killstat) * ValConfig.SkillGainOnKills.Value;
+                            float buildxp = (_piecesBuilt - builtpieces) * ValConfig.SkillGainOnBuilding.Value;
+                            float treeharvestxp = (_treesChopped - treesChopped) * ValConfig.SkillGainOnResourceGathering.Value;
+                            float mineharvestxp = (_mineAmount - miningAmount) * ValConfig.SkillGainOnResourceGathering.Value;
+                            float craftupgradexp = (_craftAndUpgrades - craftAndUpgrade) * ValConfig.SkillGainOnCrafts.Value;
+                            float totalxpgain = craftupgradexp + mineharvestxp + treeharvestxp + buildxp + killxp + bosskillxp;
+                            Jotunn.Logger.LogDebug($"Raising DeathProgression skill; KillXP:{killxp + bosskillxp} buildXP:{buildxp} harvestXP:{treeharvestxp + mineharvestxp} craftXP:{craftupgradexp} totalXP:{totalxpgain}");
+                            Player.m_localPlayer.RaiseSkill(DeathSkill, totalxpgain);
+                        }
+                        _bossKills = bkillstat;
+                        _enemykills = killstat;
+                        _piecesBuilt = builtpieces;
+                        _treesChopped = treesChopped;
+                        _mineAmount = miningAmount;
+                        _craftAndUpgrades = craftAndUpgrade;
+                    }
+                    
                     // set when we should tick the next increase
                     lastSkillIncreaseTickTime = fdt + increaseSkillInterval;
                     
@@ -61,10 +99,7 @@ public static class DeathProgressionSkill
                     float skillbonus = ((float)Math.Sqrt(__instance.m_timeSinceDeath) / 5) + 0.5f;
                     Player.m_localPlayer.RaiseSkill(DeathSkill, skillbonus);
                 }
-                
             }
         }
-        
-        
     }
 }

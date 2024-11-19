@@ -10,10 +10,17 @@ public class ValConfig
     public static ConfigEntry<string> ItemsNotSkillCheckedAction;
     public static ConfigEntry<string> ItemsNotSkillChecked;
     public static ConfigEntry<float> DeathSkillPerLevelBonus;
-    public static ConfigEntry<float> MaxPercentEquipmentRetainedOnDeath;
+    public static ConfigEntry<int> MinimumEquipmentRetainedOnDeath;
     public static ConfigEntry<float> MaxPercentResourcesRetainedOnDeath;
     public static ConfigEntry<float> MaxPercentTotalItemsRetainedOnDeath;
     public static ConfigEntry<float> GainedSkillLossFactor;
+    public static ConfigEntry<float> SkillGainOnKills;
+    public static ConfigEntry<float> SkillGainOnBossKills;
+    public static ConfigEntry<float> SkillGainOnCrafts;
+    public static ConfigEntry<float> SkillGainOnResourceGathering;
+    public static ConfigEntry<float> SkillGainOnBuilding;
+
+    public static ConfigEntry<int> SkillProgressUpdateCheckInterval;
     
     public ValConfig(ConfigFile Config)
     {
@@ -28,7 +35,7 @@ public class ValConfig
     private void CreateConfigValues(ConfigFile Config)
     {
         DeathSkillPerLevelBonus = BindServerConfig("DeathProgression","DeathSkillPerLevelBonus",1f,"How impactful death skill progression is. This impacts how much each level improves your skill and item retention.", false, 0f, 10f);
-        MaxPercentEquipmentRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentEquipmentRetainedOnDeath",100f,"The maximum amount of Equipment that can be retained on death, depends on players individual skill.", true, 0f, 100f);
+        MinimumEquipmentRetainedOnDeath = BindServerConfig("DeathProgression","MinimumEquipmentRetainedOnDeath",2,"The maximum amount of Equipment that can be retained on death, depends on players individual skill.", true, 0, 30);
         MaxPercentResourcesRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentResourcesRetainedOnDeath",20f,"The maximum amount of Resources that can be retained on death, depends on players individual skill.", true, 0f, 100f);
         MaxPercentTotalItemsRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentTotalItemsRetainedOnDeath",20f,"The maximum amount of total items that can be retained on death, depends on players individual skill.", true, 0f, 100f);
         GainedSkillLossFactor = BindServerConfig("SkillLossModifiers", "GainedSkillLossFactor", 0.2f, "The percentage of gained skills that are lost when dying.", false, 0f, 1f);
@@ -37,6 +44,14 @@ public class ValConfig
         ItemsNotSkillCheckedAction = BindServerConfig("DeathProgression", "ItemsNotSkillCheckedAction", "dropOnDeath", 
             "What happens to non-teleportable items. DropOnDeath = placed into a tombstone on death, AlwaysDestroy = never saved, AlwaysSave = These items are never destroyed and do not count towards save limits.", 
             new AcceptableValueList<string>("DropOnDeath", "AlwaysDestroy", "AlwaysSave"));
+
+        SkillGainOnKills = BindServerConfig("DeathSkillGain", "SkillGainOnKills", 0.05f, "Skill Gain from killing non-boss creatures.");
+        SkillGainOnBossKills = BindServerConfig("DeathSkillGain", "SkillGainOnBossKills", 0.2f, "Skill Gain from killing boss creatures.");
+        SkillGainOnCrafts = BindServerConfig("DeathSkillGain", "SkillGainOnCrafts", 0.08f, "Skill Gain from crafting.");
+        SkillGainOnResourceGathering = BindServerConfig("DeathSkillGain", "SkillGainOnResourceGathering", 0.001f, "Skill Gain from resource gathering.");
+        SkillGainOnBuilding = BindServerConfig("DeathSkillGain", "SkillGainOnBuilding", 0.005f, "Skill Gain from resource gathering.");
+
+        SkillProgressUpdateCheckInterval = BindServerConfig("DeathSkillGain", "SkillProgressUpdateCheckInterval", 1200, "How frequently skill gains are computed and added.", true, 120, 4800);
         
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
