@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Jotunn.Configs;
 using Jotunn.Managers;
 using UnityEngine;
+using UnityEngine.Profiling;
 using ValRougelike.Common;
 
 namespace ValRougelike.Death;
@@ -53,7 +54,15 @@ public static class DeathProgressionSkill
             timeSinceGameStart += Time.deltaTime;
             if (lastSkillIncreaseTickTime == 0f)
             {
+                ValRougelike.Player_death_skill_monitor.Setup();
                 lastSkillIncreaseTickTime = timeSinceGameStart + ValConfig.SkillProgressUpdateCheckInterval.Value;
+                PlayerProfile profile = Game.instance.GetPlayerProfile();
+                _bossKills = profile.m_playerStats.m_stats[PlayerStatType.BossKills];
+                _enemykills = profile.m_playerStats.m_stats[PlayerStatType.EnemyKills];
+                _piecesBuilt = profile.m_playerStats.m_stats[PlayerStatType.Builds];
+                _treesChopped = profile.m_playerStats.m_stats[PlayerStatType.TreeChops];
+                _mineAmount = profile.m_playerStats.m_stats[PlayerStatType.Mines];
+                _craftAndUpgrades = profile.m_playerStats.m_stats[PlayerStatType.CraftsOrUpgrades];
             }
             Jotunn.Logger.LogDebug($"DeathSkill increase interval check: {timeSinceGameStart} > {lastSkillIncreaseTickTime}");
             if (timeSinceGameStart > lastSkillIncreaseTickTime)
@@ -70,12 +79,12 @@ public static class DeathProgressionSkill
                     // Update the stat and provide a bonus based on boss kills and/or kills
                     if (bkillstat > _bossKills)
                     {
-                        float bosskillxp = (_bossKills - bkillstat) * ValConfig.SkillGainOnBossKills.Value;
-                        float killxp = (_enemykills - killstat) * ValConfig.SkillGainOnKills.Value;
-                        float buildxp = (_piecesBuilt - builtpieces) * ValConfig.SkillGainOnBuilding.Value;
-                        float treeharvestxp = (_treesChopped - treesChopped) * ValConfig.SkillGainOnResourceGathering.Value;
-                        float mineharvestxp = (_mineAmount - miningAmount) * ValConfig.SkillGainOnResourceGathering.Value;
-                        float craftupgradexp = (_craftAndUpgrades - craftAndUpgrade) * ValConfig.SkillGainOnCrafts.Value;
+                        float bosskillxp = (bkillstat - _bossKills) * ValConfig.SkillGainOnBossKills.Value;
+                        float killxp = (killstat - _enemykills) * ValConfig.SkillGainOnKills.Value;
+                        float buildxp = (builtpieces - _piecesBuilt) * ValConfig.SkillGainOnBuilding.Value;
+                        float treeharvestxp = (treesChopped - _treesChopped) * ValConfig.SkillGainOnResourceGathering.Value;
+                        float mineharvestxp = (miningAmount - _mineAmount) * ValConfig.SkillGainOnResourceGathering.Value;
+                        float craftupgradexp = (craftAndUpgrade - _craftAndUpgrades) * ValConfig.SkillGainOnCrafts.Value;
                         float totalxpgain = craftupgradexp + mineharvestxp + treeharvestxp + buildxp + killxp + bosskillxp;
                         Jotunn.Logger.LogDebug($"Raising DeathProgression skill; KillXP:{killxp + bosskillxp} buildXP:{buildxp} harvestXP:{treeharvestxp + mineharvestxp} craftXP:{craftupgradexp} totalXP:{totalxpgain}");
                         Player.m_localPlayer.RaiseSkill(DeathSkill, totalxpgain);

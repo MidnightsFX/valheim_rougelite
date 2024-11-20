@@ -51,7 +51,7 @@ public class ValConfig
         SkillGainOnResourceGathering = BindServerConfig("DeathSkillGain", "SkillGainOnResourceGathering", 0.001f, "Skill Gain from resource gathering.");
         SkillGainOnBuilding = BindServerConfig("DeathSkillGain", "SkillGainOnBuilding", 0.005f, "Skill Gain from resource gathering.");
 
-        SkillProgressUpdateCheckInterval = BindServerConfig("DeathSkillGain", "SkillProgressUpdateCheckInterval", 1200f, "How frequently skill gains are computed and added. More frequently means smaller xp gains more often.", true, 0.01f, 100f);
+        SkillProgressUpdateCheckInterval = BindServerConfig("DeathSkillGain", "SkillProgressUpdateCheckInterval", 1200f, "How frequently skill gains are computed and added. More frequently means smaller xp gains more often.", true, 1f, 3600f);
         
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,

@@ -23,7 +23,7 @@ namespace ValRougelike
 
         public ValConfig cfg;
         internal static AssetBundle EmbeddedResourceBundle;
-        internal DeathSkillContainment player_death_skill_monitor;
+        internal static DeathSkillContainment Player_death_skill_monitor;
 
         // Use this class to add your own localization to the game
         // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
@@ -35,7 +35,7 @@ namespace ValRougelike
             // Jotunn comes with its own Logger class to provide a consistent Log style for all mods using it
 
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("ValRougelike.AssetsEmbedded.deathless", typeof(ValRougelike).Assembly);
-            player_death_skill_monitor = new DeathSkillContainment();
+            Player_death_skill_monitor = new DeathSkillContainment();
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
             
