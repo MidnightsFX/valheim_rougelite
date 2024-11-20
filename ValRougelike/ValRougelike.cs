@@ -35,6 +35,7 @@ namespace ValRougelike
             // Jotunn comes with its own Logger class to provide a consistent Log style for all mods using it
 
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("ValRougelike.AssetsEmbedded.deathless", typeof(ValRougelike).Assembly);
+            DeathProgressionSkill.SetupDeathSkill();
             Player_death_skill_monitor = new DeathSkillContainment();
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
