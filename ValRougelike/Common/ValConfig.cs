@@ -1,7 +1,7 @@
 ﻿using System;
 using BepInEx.Configuration;
 
-namespace ValRougelike.Common;
+namespace Deathlink.Common;
 
 public class ValConfig
 {
@@ -14,11 +14,14 @@ public class ValConfig
     public static ConfigEntry<float> MaxPercentResourcesRetainedOnDeath;
     public static ConfigEntry<float> MaxPercentTotalItemsRetainedOnDeath;
     public static ConfigEntry<float> GainedSkillLossFactor;
+    public static ConfigEntry<bool> OnlyXPLossFromSkillGains;
     public static ConfigEntry<float> SkillGainOnKills;
     public static ConfigEntry<float> SkillGainOnBossKills;
     public static ConfigEntry<float> SkillGainOnCrafts;
     public static ConfigEntry<float> SkillGainOnResourceGathering;
     public static ConfigEntry<float> SkillGainOnBuilding;
+    //public static ConfigEntry<bool> FoodLossOnDeath;
+    //public static ConfigEntry <bool> EffectRemovalOnDeath;
 
     public static ConfigEntry<float> SkillProgressUpdateCheckInterval;
     
@@ -35,10 +38,11 @@ public class ValConfig
     private void CreateConfigValues(ConfigFile Config)
     {
         DeathSkillPerLevelBonus = BindServerConfig("DeathProgression","DeathSkillPerLevelBonus",1f,"How impactful death skill progression is. This impacts how much each level improves your skill and item retention.", false, 0f, 10f);
-        MinimumEquipmentRetainedOnDeath = BindServerConfig("DeathProgression","MinimumEquipmentRetainedOnDeath",2,"The maximum amount of Equipment that can be retained on death, depends on players individual skill.", true, 0, 30);
+        MinimumEquipmentRetainedOnDeath = BindServerConfig("DeathProgression","MinimumEquipmentRetainedOnDeath",2,"The minimum amount of Equipment that can be retained on death, depends on players individual skill.", true, 0, 30);
         MaxPercentResourcesRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentResourcesRetainedOnDeath",20f,"The maximum amount of Resources that can be retained on death, depends on players individual skill.", true, 0f, 100f);
-        MaxPercentTotalItemsRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentTotalItemsRetainedOnDeath",20f,"The maximum amount of total items that can be retained on death, depends on players individual skill.", true, 0f, 100f);
-        GainedSkillLossFactor = BindServerConfig("SkillLossModifiers", "GainedSkillLossFactor", 0.2f, "The percentage of gained skills that are lost when dying.", false, 0f, 1f);
+        MaxPercentTotalItemsRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentTotalItemsRetainedOnDeath",90f,"The maximum amount of total items that can be retained on death, depends on players individual skill.", true, 0f, 100f);
+        OnlyXPLossFromSkillGains = BindServerConfig("SkillLossModifiers", "OnlyXPLossFromSkillGains", true, "When enabled, you can only loose XP gained since the last death. Repeated deaths regardless of time without skill gains will not result in XP loss.");
+        GainedSkillLossFactor = BindServerConfig("SkillLossModifiers", "GainedSkillLossFactor", 0.2f, "The percentage of skills that are lost when dying.", false, 0f, 1f);
 
         ItemsNotSkillChecked = BindServerConfig("DeathProgression", "ItemsNotSkillChecked", "Tin,TinOre,Copper,CopperOre,CopperScrap,Bronze,Iron,IronScrap,Silver,SilverOre,DragonEgg,chest_hildir1,chest_hildir2,chest_hildir3,BlackMetal,BlackMetalScrap,DvergrNeedle,MechanicalSpring,FlametalNew,FlametalOreNew", "List of items that are not rolled to be saved through death progression.");
         ItemsNotSkillCheckedAction = BindServerConfig("DeathProgression", "ItemsNotSkillCheckedAction", "dropOnDeath", 
@@ -52,10 +56,12 @@ public class ValConfig
         SkillGainOnBuilding = BindServerConfig("DeathSkillGain", "SkillGainOnBuilding", 0.005f, "Skill Gain from resource gathering.");
 
         SkillProgressUpdateCheckInterval = BindServerConfig("DeathSkillGain", "SkillProgressUpdateCheckInterval", 1200f, "How frequently skill gains are computed and added. More frequently means smaller xp gains more often.", true, 0.1f, 100f);
-        
+
+        //FoodLossOnDeath = BindServerConfig("DeathTweaks", "FoodLossOnDeath", true, "Whether or not dying will cause you to loose your current food.");
+
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
-            new ConfigDescription("Enables Debug logging for Valheim Armory.",
+            new ConfigDescription("Enables Debug logging.",
             null,
             new ConfigurationManagerAttributes { IsAdvanced = true }));
     }

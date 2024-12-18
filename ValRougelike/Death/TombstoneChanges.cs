@@ -2,9 +2,9 @@
 using System.Linq;
 using HarmonyLib;
 using UnityEngine;
-using ValRougelike.Common;
+using Deathlink.Common;
 
-namespace ValRougelike.Death;
+namespace Deathlink.Death;
 
 public static class TombstoneChanges
 {
@@ -32,8 +32,8 @@ public static class TombstoneChanges
             Jotunn.Logger.LogDebug($"Player number of items {playerItems.Count}, savable due to skill {numberOfItemsSavable}");
             if (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value > ((float)numberOfItemsSavable / playerItems.Count))
             {
-                numberOfItemsSavable = (int)(playerItems.Count * ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value);
-                Jotunn.Logger.LogDebug($"Number of items savable reduced due to configured max ({ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value}) now: {numberOfItemsSavable}");
+                numberOfItemsSavable = (int)(playerItems.Count * (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value/100));
+                Jotunn.Logger.LogDebug($"Number of items savable reduced due to configured max ({ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value}%) now: {numberOfItemsSavable}");
             }
             
             // Equipment items are handled differently than resources etc
@@ -43,12 +43,17 @@ public static class TombstoneChanges
                 // we have enough items savable to save all equipment
                 // we'll reduce the number of items we save from our potential savable poolsize
                 // savedItems.AddRange(playerEquipment);
+                foreach (ItemDrop.ItemData item in playerEquipment)
+                {
+                    if (item.m_equipped) { continue; }
+                    // If the item is not equipped but is still equipment, it should be saved since we have space for it
+                    savedItems.Add(item);
+                }
                 numberOfItemsSavable -= playerEquipment.Count;
-            } else
-            {
+            } else {
                 // we do not have enough to save all equipped items
                 // first we shuffle the equipment, so we do not delete the same items each death
-                playerEquipment = ValRougelike.shuffleList(playerItemsWithoutNonSkillCheckedItems);
+                playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems);
                 foreach (var equipment in playerEquipment)
                 {
                     if (numberOfItemsSavable > 0)
@@ -67,7 +72,7 @@ public static class TombstoneChanges
             if (numberOfItemsSavable > 0)
             {
                 // shuffle inventory items that are not equipment
-                List<ItemDrop.ItemData> nonEquippableItems = ValRougelike.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetNotEquipment());
+                List<ItemDrop.ItemData> nonEquippableItems = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetNotEquipment());
                 int max_number_resources_savable = (int)(ValConfig.MaxPercentResourcesRetainedOnDeath.Value * nonEquippableItems.Count);
                 foreach (var item in nonEquippableItems)
                 {
@@ -118,6 +123,13 @@ public static class TombstoneChanges
                 // might need to check if we actually can add the item here
                 __instance.m_inventory.AddItem(item);
             }
+
+            //if (ValConfig.FoodLossOnDeath.Value) {
+            //    __instance.ClearFood();
+            //}
+            //if (ValConfig.EffectRemovalOnDeath.Value) {
+            //    __instance.m_seman.RemoveAllStatusEffects();
+            //}
 
             return false;
         }

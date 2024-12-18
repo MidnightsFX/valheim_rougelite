@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
-using ValRougelike.Common;
+using Deathlink.Common;
 
-namespace ValRougelike.Death;
+namespace Deathlink.Death;
 
 public class DeathSkillContainment
 {
@@ -62,12 +62,19 @@ public static class SkillsChanges
     {
         private static bool Prefix(Skills __instance)
         {
-            foreach (KeyValuePair<Skills.SkillType, float> IncreasedSkill in skillGainMonitor.GetSkillGains())
+            if (ValConfig.OnlyXPLossFromSkillGains.Value)
             {
-                float lostEXP = IncreasedSkill.Value * ValConfig.GainedSkillLossFactor.Value;
-                __instance.m_skillData[IncreasedSkill.Key].m_level -= lostEXP;
+                foreach (KeyValuePair<Skills.SkillType, float> IncreasedSkill in skillGainMonitor.GetSkillGains())
+                {
+                    float lostEXP = IncreasedSkill.Value * ValConfig.GainedSkillLossFactor.Value;
+                    __instance.m_skillData[IncreasedSkill.Key].m_level -= lostEXP;
+                }
+                skillGainMonitor.Clear();
+            } else {
+                // Do a standard decrease of all skills- but with the factor that we specified
+                __instance.LowerAllSkills(ValConfig.GainedSkillLossFactor.Value);
             }
-            skillGainMonitor.Clear();
+
             // We are skipping the original skill decrease
             return false;
         }

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace ValRougelike;
+namespace Deathlink;
 
 public static class Extensions
 {

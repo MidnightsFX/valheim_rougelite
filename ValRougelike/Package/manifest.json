@@ -1,10 +1,10 @@
 ﻿{
-  "name": "ValRougelike",
-  "description": "",
-  "version_number": "0.0.1",
-  "website_url": "",
+  "name": "Deathlink",
+  "description": "A Rougelike death control system for Valheim.",
+  "version_number": "0.1.0",
+  "website_url": "https://discord.gg/Dmr9PQTy9m",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2202",
-    "ValheimModding-Jotunn-2.20.1"
+    "ValheimModding-Jotunn-2.22.0"
   ]
 }

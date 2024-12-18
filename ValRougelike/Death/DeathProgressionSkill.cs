@@ -3,10 +3,9 @@ using HarmonyLib;
 using Jotunn.Configs;
 using Jotunn.Managers;
 using UnityEngine;
-using ValRougelike.Common;
-using static UnityEngine.InputSystem.Layouts.InputControlLayout;
+using Deathlink.Common;
 
-namespace ValRougelike.Death;
+namespace Deathlink.Death;
 
 public static class DeathProgressionSkill
 {
@@ -25,7 +24,7 @@ public static class DeathProgressionSkill
         SkillConfig deathskill = new SkillConfig();
         deathskill.Name = "Deathlink";
         deathskill.Description = "How apt you are at avoiding loss from death.";
-        deathskill.Icon = ValRougelike.EmbeddedResourceBundle.LoadAsset<Sprite>("Assets/Custom/Icons/death_skill.png"); ;
+        deathskill.Icon = Deathlink.EmbeddedResourceBundle.LoadAsset<Sprite>("Assets/Custom/Icons/death_skill.png"); ;
         deathskill.Identifier = "midnightsfx.deathskill";
         deathskill.IncreaseStep = 0.1f;
         DeathSkill = SkillManager.Instance.AddSkill(deathskill);
@@ -47,6 +46,7 @@ public static class DeathProgressionSkill
         return percentage;
     }
 
+
     [HarmonyPatch(typeof(Player), nameof(Player.RaiseSkill))]
     public class Deathskill_EXP_Patch
     {
@@ -55,7 +55,7 @@ public static class DeathProgressionSkill
             timeSinceGameStart += Time.deltaTime;
             if (lastSkillIncreaseTickTime == 0f)
             {
-                ValRougelike.Player_death_skill_monitor.Setup();
+                Deathlink.Player_death_skill_monitor.Setup();
                 lastSkillIncreaseTickTime = timeSinceGameStart + ValConfig.SkillProgressUpdateCheckInterval.Value;
                 PlayerProfile profile = Game.instance.GetPlayerProfile();
                 _bossKills = profile.m_playerStats.m_stats[PlayerStatType.BossKills];
