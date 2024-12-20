@@ -62,7 +62,7 @@
     <Compile Include="Common\ValConfig.cs" />
     <Compile Include="Death\DeathProgressionSkill.cs" />
     <Compile Include="Death\SkillsChanges.cs" />
-    <Compile Include="Death\TombstoneChanges.cs" />
+    <Compile Include="Death\OnDeathChanges.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
     <Compile Include="Deathlink.cs" />

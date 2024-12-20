@@ -20,8 +20,10 @@ public class ValConfig
     public static ConfigEntry<float> SkillGainOnCrafts;
     public static ConfigEntry<float> SkillGainOnResourceGathering;
     public static ConfigEntry<float> SkillGainOnBuilding;
-    //public static ConfigEntry<bool> FoodLossOnDeath;
-    //public static ConfigEntry <bool> EffectRemovalOnDeath;
+    public static ConfigEntry<bool> FoodLossOnDeath;
+    public static ConfigEntry<bool> FoodLossOnDeathBySkillLevel;
+    public static ConfigEntry<bool> ShowDeathMapMarker;
+    //public static ConfigEntry<bool> EffectRemovalOnDeath;
 
     public static ConfigEntry<float> SkillProgressUpdateCheckInterval;
     
@@ -57,7 +59,9 @@ public class ValConfig
 
         SkillProgressUpdateCheckInterval = BindServerConfig("DeathSkillGain", "SkillProgressUpdateCheckInterval", 1200f, "How frequently skill gains are computed and added. More frequently means smaller xp gains more often.", true, 0.1f, 100f);
 
-        //FoodLossOnDeath = BindServerConfig("DeathTweaks", "FoodLossOnDeath", true, "Whether or not dying will cause you to loose your current food.");
+        FoodLossOnDeath = BindServerConfig("DeathTweaks", "FoodLossOnDeath", true, "Whether or not dying will cause you to loose your current food.");
+        FoodLossOnDeathBySkillLevel = BindServerConfig("DeathTweaks", "FoodLossOnDeathBySkillLevel", true, "Whether or not dying will cause you to loose your eaten foods based on skill level.");
+        ShowDeathMapMarker = BindServerConfig("DeathTweaks", "ShowDeathMapMarker", true, "Whether or not a map marker is placed on your death location.");
 
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,

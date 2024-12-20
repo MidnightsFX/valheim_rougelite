@@ -1,3 +1,11 @@
+  **0.2.0**
+---
+```
+- Add configurable food clearing on death
+- Add configurable food clearing based on skill level on death
+- Added configuration to add or not add a map marker on death
+```
+
   **0.1.0**
 ---
 ```
