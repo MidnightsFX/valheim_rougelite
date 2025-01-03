@@ -101,6 +101,7 @@ public static class OnDeathChanges
         public static void TombstoneOnDeath(Player instance)
         {
             List<ItemDrop.ItemData> savedItems = new List<ItemDrop.ItemData>();
+            List<ItemDrop.ItemData> savedQuickslots = new List<ItemDrop.ItemData>();
             List<ItemDrop.ItemData> playerItems = instance.m_inventory.GetAllItems();
             List<ItemDrop.ItemData> playerNonSkillCheckItems = new List<ItemDrop.ItemData>();
             List<ItemDrop.ItemData> playerItemsWithoutNonSkillCheckedItems = new List<ItemDrop.ItemData>();
@@ -108,12 +109,9 @@ public static class OnDeathChanges
             string[] nonSkillCheckedItems = ValConfig.ItemsNotSkillChecked.Value.Split(',');
             foreach (ItemDrop.ItemData item in playerItems)
             {
-                if (nonSkillCheckedItems.Contains(item.m_shared.m_name))
-                {
+                if (nonSkillCheckedItems.Contains(item.m_shared.m_name)) {
                     playerNonSkillCheckItems.Add(item);
-                }
-                else
-                {
+                } else {
                     playerItemsWithoutNonSkillCheckedItems.Add(item);
                 }
             }
@@ -134,6 +132,7 @@ public static class OnDeathChanges
                 // savedItems.AddRange(playerEquipment);
                 foreach (ItemDrop.ItemData item in playerEquipment)
                 {
+                    Jotunn.Logger.LogDebug($"Saving equipment {item.m_dropPrefab.name}");
                     if (item.m_equipped) { continue; }
                     // If the item is not equipped but is still equipment, it should be saved since we have space for it
                     savedItems.Add(item);
@@ -149,6 +148,7 @@ public static class OnDeathChanges
                 {
                     if (numberOfItemsSavable > 0)
                     {
+                        Jotunn.Logger.LogDebug($"Saving equipment {equipment.m_dropPrefab.name}");
                         numberOfItemsSavable -= 1;
                         continue;
                     }
@@ -157,6 +157,32 @@ public static class OnDeathChanges
                 // we saved as much equipment as we could, everything else will be lost
                 instance.m_inventory.RemoveUnequipped();
                 return;
+            }
+
+            if (Deathlink.AzuEPILoaded)
+            {
+                List<ItemDrop.ItemData> quickslot_items = AzuExtendedPlayerInventory.API.GetQuickSlotsItems();
+                List<ItemDrop.ItemData> quickslot_items_to_remove = new List<ItemDrop.ItemData>();
+                foreach (ItemDrop.ItemData item in quickslot_items)
+                {
+                    if (numberOfItemsSavable > 0)
+                    {
+                        Jotunn.Logger.LogDebug($"Saving quickslot {item.m_dropPrefab.name}");
+                        savedQuickslots.Add(item);
+                        numberOfItemsSavable -= 1;
+                        continue;
+                    } else {
+                        quickslot_items_to_remove.Add(item);
+                    }
+                }
+                if (quickslot_items_to_remove.Count > 0)
+                {
+                    foreach (ItemDrop.ItemData remove_item in quickslot_items_to_remove)
+                    {
+                        Jotunn.Logger.LogDebug($"Deleting {remove_item.m_dropPrefab.name}");
+                        quickslot_items.Remove(remove_item);
+                    }
+                }
             }
 
             // we still have savable space after saving any equipped items
@@ -169,6 +195,7 @@ public static class OnDeathChanges
                 {
                     if (numberOfItemsSavable > 0 && max_number_resources_savable > 0)
                     {
+                        Jotunn.Logger.LogDebug($"Saving {item.m_dropPrefab.name}");
                         savedItems.Add(item);
                         numberOfItemsSavable -= 1;
                         max_number_resources_savable -= 1;
@@ -213,6 +240,17 @@ public static class OnDeathChanges
             {
                 // might need to check if we actually can add the item here
                 instance.m_inventory.AddItem(item);
+            }
+            if (savedQuickslots.Count > 0)
+            {
+                foreach(var item in savedQuickslots)
+                {
+                    // Readd Azu Quickslot Items
+                    if (Deathlink.AzuEPILoaded)
+                    {
+                        instance.m_inventory.AddItem(item);
+                    }
+                }
             }
         }
 

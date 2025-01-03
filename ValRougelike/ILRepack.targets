@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- ILRepack -->
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll" />
+      <!-- This is needed to reference Nuget packages, which this project uses for everything except valheim/bepinex -->
+      <InputAssemblies Include="@(ReferencePathWithRefAssemblies)" Condition="'%(filename)' == 'AzuExtendedPlayerInventoryAPI'" />
+    </ItemGroup>
+
+    <ILRepack
+        DebugInfo="true"
+        Parallel="true"
+        Internalize="true"
+        LibraryPath="$(OutputPath)"
+        InputAssemblies="@(InputAssemblies)"
+        TargetKind="Dll"
+        OutputFile="$(OutputPath)$(AssemblyName).dll"
+        />
+  </Target>
+  <Target Name="CopyToThunderstore" AfterTargets="ILRepacker">
+    <Message Text="Copying packaged dll" Importance="high" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="C:/Users/carls/AppData/Roaming/Thunderstore Mod Manager/DataFolder/Valheim/profiles/modtesting/BepInEx/plugins" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="C:/Users/carls/AppData/Roaming/com.kesomannen.gale/valheim/profiles/Modtest/BepInEx/plugins" />
+    <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(ProjectDir)\Package\plugins\" />
+  </Target>
+  <!-- /ILRepack -->
+</Project>

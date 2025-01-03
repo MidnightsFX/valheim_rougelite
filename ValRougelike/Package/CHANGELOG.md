@@ -1,3 +1,13 @@
+  **0.3.0**
+---
+```
+- Fixes old binary being included
+- Adds AzuEPI integration
+	- Supports saving items from quickslots added by any mods that use AzuEPI
+	- Saving of items is not ordered and may not result in the item staying in the slot (unless it is equipment)
+- Logo fixes
+```
+
   **0.2.0**
 ---
 ```

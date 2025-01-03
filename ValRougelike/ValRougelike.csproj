@@ -46,6 +46,13 @@
     <StartWorkingDirectory>$(VALHEIM_INSTALL)</StartWorkingDirectory>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AzuExtendedPlayerInventoryAPI, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>external\AzuExtendedPlayerInventoryAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="ILRepack, Version=2.0.36.0, Culture=neutral, PublicKeyToken=c3e9373f1c31208e, processorArchitecture=MSIL">
+      <HintPath>..\packages\ILRepack.Lib.2.0.36\lib\net472\ILRepack.dll</HintPath>
+    </Reference>
     <Reference Include="Jotunn, Version=2.22.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\JotunnLib.2.22.0\lib\net462\Jotunn.dll</HintPath>
     </Reference>
@@ -82,6 +89,9 @@
     <None Include="Package\manifest.json" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="external\AzuExtendedPlayerInventoryAPI.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Package\icon.png" />
   </ItemGroup>
   <PropertyGroup>
@@ -119,16 +129,10 @@
     <Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -ValheimPath &quot;$(VALHEIM_INSTALL.TrimEnd('\'))&quot; -DeployPath &quot;$(MOD_DEPLOYPATH.TrimEnd('\'))&quot; -ProjectPath &quot;$(ProjectDir.TrimEnd('\'))&quot; " />
     <CallTarget Targets="CopyToUnity" Condition="Exists('$(UNITY_FOLDER)')" />
   </Target>
-  <Target Name="CopyToThunderstore">
-    <Message Text="Copying to Thunderstore Deployment" Importance="high" />
-    <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="C:/Users/carls/AppData/Roaming/Thunderstore Mod Manager/DataFolder/Valheim/profiles/modtesting/BepInEx/plugins" />
-    <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="C:/Users/carls/AppData/Roaming/com.kesomannen.gale/valheim/profiles/Modtest/BepInEx/plugins" />
-  </Target>
   <PropertyGroup>
     <BuildDependsOn>
       $(BuildDependsOn);
       JotunnPostBuildTaskWin;
-      CopyToThunderstore
     </BuildDependsOn>
   </PropertyGroup>
   <PropertyGroup>
@@ -140,5 +144,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\JotunnLib.2.22.0\build\JotunnLib.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\JotunnLib.2.22.0\build\JotunnLib.props'))" />
+    <Error Condition="!Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.34.2\build\ILRepack.Lib.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.Lib.MSBuild.Task.2.0.34.2\build\ILRepack.Lib.MSBuild.Task.targets'))" />
   </Target>
+  <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.34.2\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.34.2\build\ILRepack.Lib.MSBuild.Task.targets')" />
 </Project>

@@ -22,6 +22,7 @@ I have a number of things that I plan on adding. While the existing mod is funct
 - UI modifications to provide feedback on how much or little XP for a skill would be lost by dying
 - Bonus Resources based on survival skill (offset losses from item deletion)
 - Bonus XP for other skills based on survival
+- Integrations for the various extended inventory mods
 
 ## What this mod does
 

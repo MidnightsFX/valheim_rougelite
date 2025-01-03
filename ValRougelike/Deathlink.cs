@@ -12,17 +12,19 @@ using Deathlink.Death;
 namespace Deathlink
 {
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
-    [BepInDependency(Jotunn.Main.ModGuid)]
+    [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     [NetworkCompatibility(CompatibilityLevel.ClientMustHaveMod, VersionStrictness.Minor)]
+    [BepInDependency("Azumatt.AzuExtendedPlayerInventory", BepInDependency.DependencyFlags.SoftDependency)]
     internal class Deathlink : BaseUnityPlugin
     {
         public const string PluginGUID = "MidnightsFX.Deathlink";
         public const string PluginName = "Deathlink";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "0.3.0";
 
         public ValConfig cfg;
         internal static AssetBundle EmbeddedResourceBundle;
         internal static DeathSkillContainment Player_death_skill_monitor;
+        internal static bool AzuEPILoaded = false;
 
         // Use this class to add your own localization to the game
         // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
@@ -36,6 +38,10 @@ namespace Deathlink
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("Deathlink.AssetsEmbedded.deathless", typeof(Deathlink).Assembly);
             DeathProgressionSkill.SetupDeathSkill();
             Player_death_skill_monitor = new DeathSkillContainment();
+
+            if (AzuExtendedPlayerInventory.API.IsLoaded()) {
+                AzuEPILoaded = true;
+            }
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
             
