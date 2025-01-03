@@ -130,12 +130,20 @@ public static class OnDeathChanges
                 // we have enough items savable to save all equipment
                 // we'll reduce the number of items we save from our potential savable poolsize
                 // savedItems.AddRange(playerEquipment);
-                foreach (ItemDrop.ItemData item in playerEquipment)
-                {
+                int equipment_saved = 0;
+                foreach (ItemDrop.ItemData item in playerEquipment) {
+                    if (equipment_saved >= ValConfig.MaximumEquipmentRetainedOnDeath.Value) {
+                        Jotunn.Logger.LogDebug($"Max equipment retained ({ValConfig.MaximumEquipmentRetainedOnDeath.Value}) reached, not saving more equipment");
+                        break;
+                    }
                     Jotunn.Logger.LogDebug($"Saving equipment {item.m_dropPrefab.name}");
-                    if (item.m_equipped) { continue; }
+                    if (item.m_equipped) {
+                        equipment_saved += 1;
+                        continue; 
+                    }
                     // If the item is not equipped but is still equipment, it should be saved since we have space for it
                     savedItems.Add(item);
+                    equipment_saved += 1;
                 }
                 numberOfItemsSavable -= playerEquipment.Count;
             }
@@ -241,8 +249,7 @@ public static class OnDeathChanges
                 // might need to check if we actually can add the item here
                 instance.m_inventory.AddItem(item);
             }
-            if (savedQuickslots.Count > 0)
-            {
+            if (savedQuickslots.Count > 0) {
                 foreach(var item in savedQuickslots)
                 {
                     // Readd Azu Quickslot Items
@@ -251,6 +258,9 @@ public static class OnDeathChanges
                         instance.m_inventory.AddItem(item);
                     }
                 }
+            }
+            if (ValConfig.ItemsSavedToTombstone.Value) {
+                instance.CreateTombStone();
             }
         }
 

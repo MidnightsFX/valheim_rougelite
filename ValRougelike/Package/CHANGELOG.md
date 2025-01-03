@@ -1,3 +1,10 @@
+  **0.3.1**
+---
+```
+- Adds a max number of equipment items saved option
+- Adds the option to save all items to the tomb stone
+```
+
   **0.3.0**
 ---
 ```
