@@ -123,8 +123,21 @@ public static class OnDeathChanges
                 Jotunn.Logger.LogDebug($"Number of items savable reduced due to configured max ({ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value}%) now: {numberOfItemsSavable}");
             }
 
+            if (Deathlink.AzuEPILoaded)
+            {
+                foreach (ItemDrop.ItemData item in AzuExtendedPlayerInventory.API.GetQuickSlotsItems())
+                {
+                    if (nonSkillCheckedItems.Contains(item.m_shared.m_name)) {
+                        playerNonSkillCheckItems.Add(item);
+                    } else {
+                        playerItemsWithoutNonSkillCheckedItems.Add(item);
+                    }
+                }
+            }
+
             // Equipment items are handled differently than resources etc
-            List<ItemDrop.ItemData> playerEquipment = playerItemsWithoutNonSkillCheckedItems.GetEquipment();
+            List <ItemDrop.ItemData> playerEquipment = playerItemsWithoutNonSkillCheckedItems.GetEquipment();
+
             if (playerEquipment.Count <= numberOfItemsSavable)
             {
                 // we have enough items savable to save all equipment
@@ -151,7 +164,7 @@ public static class OnDeathChanges
             {
                 // we do not have enough to save all equipped items
                 // first we shuffle the equipment, so we do not delete the same items each death
-                playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems);
+                playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetEquipment());
                 foreach (var equipment in playerEquipment)
                 {
                     if (numberOfItemsSavable > 0)
@@ -165,32 +178,6 @@ public static class OnDeathChanges
                 // we saved as much equipment as we could, everything else will be lost
                 instance.m_inventory.RemoveUnequipped();
                 return;
-            }
-
-            if (Deathlink.AzuEPILoaded)
-            {
-                List<ItemDrop.ItemData> quickslot_items = AzuExtendedPlayerInventory.API.GetQuickSlotsItems();
-                List<ItemDrop.ItemData> quickslot_items_to_remove = new List<ItemDrop.ItemData>();
-                foreach (ItemDrop.ItemData item in quickslot_items)
-                {
-                    if (numberOfItemsSavable > 0)
-                    {
-                        Jotunn.Logger.LogDebug($"Saving quickslot {item.m_dropPrefab.name}");
-                        savedQuickslots.Add(item);
-                        numberOfItemsSavable -= 1;
-                        continue;
-                    } else {
-                        quickslot_items_to_remove.Add(item);
-                    }
-                }
-                if (quickslot_items_to_remove.Count > 0)
-                {
-                    foreach (ItemDrop.ItemData remove_item in quickslot_items_to_remove)
-                    {
-                        Jotunn.Logger.LogDebug($"Deleting {remove_item.m_dropPrefab.name}");
-                        quickslot_items.Remove(remove_item);
-                    }
-                }
             }
 
             // we still have savable space after saving any equipped items
@@ -252,20 +239,15 @@ public static class OnDeathChanges
                 // might need to check if we actually can add the item here
                 instance.m_inventory.AddItem(item);
             }
-            if (savedQuickslots.Count > 0) {
 
-                // Readd Azu Quickslot Items in their quickslot positions
-                if (Deathlink.AzuEPILoaded)
-                {
-                    Vector2[] quickslot_info = AzuExtendedPlayerInventory.API.GetQuickSlots().SlotPositions;
-                    int qsindx = 0;
-                    foreach (var item in savedQuickslots)
-                    {
-                        instance.m_inventory.AddItem(item, item.m_stack, (int)quickslot_info[qsindx].x, (int)quickslot_info[qsindx].y);
-                        qsindx += 1;
-                    }
-                }
-            }
+            //// Readd Azu Quickslot Items in their quickslot positions
+            //if (Deathlink.AzuEPILoaded)
+            //{
+            //    List<ItemDrop.ItemData> quick_slot_items = AzuExtendedPlayerInventory.API.GetQuickSlotsItems();
+            //    foreach (var item in quick_slot_items) {
+
+            //    }
+            //}
             if (ValConfig.ItemsSavedToTombstone.Value) {
                 instance.CreateTombStone();
             }

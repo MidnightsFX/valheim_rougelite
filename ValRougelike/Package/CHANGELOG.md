@@ -1,3 +1,9 @@
+  **0.3.2**
+---
+```
+- Fixed AzuExtendedInventory integration not shuffling saved equipment
+```
+
   **0.3.1**
 ---
 ```
