@@ -224,6 +224,7 @@ public static class OnDeathChanges
             switch (ValConfig.ItemsNotSkillCheckedAction.Value)
             {
                 case "DropOnDeath":
+                    Jotunn.Logger.LogDebug("Dropping non-skill-checked items on death");
                     foreach (var item in playerNonSkillCheckItems)
                     {
                         // might need to check if we actually can add the item here
@@ -238,9 +239,11 @@ public static class OnDeathChanges
                     component.Setup(name, playerId);
                     break;
                 case "AlwaysDestroy":
+                    Jotunn.Logger.LogDebug("Destroying non-skill-checked items on death");
                     // we do nothing, these items will be destroyed
                     break;
                 case "AlwaysSave":
+                    Jotunn.Logger.LogDebug("Saving non-skill-checked items on death");
                     savedItems.AddRange(playerNonSkillCheckItems);
                     break;
             }
@@ -250,12 +253,16 @@ public static class OnDeathChanges
                 instance.m_inventory.AddItem(item);
             }
             if (savedQuickslots.Count > 0) {
-                foreach(var item in savedQuickslots)
+
+                // Readd Azu Quickslot Items in their quickslot positions
+                if (Deathlink.AzuEPILoaded)
                 {
-                    // Readd Azu Quickslot Items
-                    if (Deathlink.AzuEPILoaded)
+                    Vector2[] quickslot_info = AzuExtendedPlayerInventory.API.GetQuickSlots().SlotPositions;
+                    int qsindx = 0;
+                    foreach (var item in savedQuickslots)
                     {
-                        instance.m_inventory.AddItem(item);
+                        instance.m_inventory.AddItem(item, item.m_stack, (int)quickslot_info[qsindx].x, (int)quickslot_info[qsindx].y);
+                        qsindx += 1;
                     }
                 }
             }
