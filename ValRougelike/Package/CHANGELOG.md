@@ -1,7 +1,8 @@
   **0.3.2**
 ---
 ```
-- Fixed AzuExtendedInventory integration not shuffling saved equipment
+- Fixes AzuExtendedInventory integration not shuffling saved equipment
+- Fixes MaxItemsSaved resulting in the same items regularly being saved
 ```
 
   **0.3.1**

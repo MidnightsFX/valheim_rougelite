@@ -3,6 +3,7 @@ using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 using Deathlink.Common;
+using System.ComponentModel;
 
 namespace Deathlink.Death;
 
@@ -136,18 +137,19 @@ public static class OnDeathChanges
             }
 
             // Equipment items are handled differently than resources etc
-            List <ItemDrop.ItemData> playerEquipment = playerItemsWithoutNonSkillCheckedItems.GetEquipment();
-
+            List <ItemDrop.ItemData> playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetEquipment());
+            int equipment_saved = 0;
             if (playerEquipment.Count <= numberOfItemsSavable)
             {
                 // we have enough items savable to save all equipment
                 // we'll reduce the number of items we save from our potential savable poolsize
                 // savedItems.AddRange(playerEquipment);
-                int equipment_saved = 0;
+                
                 foreach (ItemDrop.ItemData item in playerEquipment) {
                     if (equipment_saved >= ValConfig.MaximumEquipmentRetainedOnDeath.Value) {
-                        Jotunn.Logger.LogDebug($"Max equipment retained ({ValConfig.MaximumEquipmentRetainedOnDeath.Value}) reached, not saving more equipment");
-                        break;
+                        Jotunn.Logger.LogDebug($"Max equipment retained ({ValConfig.MaximumEquipmentRetainedOnDeath.Value}) reached, deleting {item.m_dropPrefab.name}");
+                        instance.m_inventory.RemoveItem(item);
+                        continue;
                     }
                     Jotunn.Logger.LogDebug($"Saving equipment {item.m_dropPrefab.name}");
                     if (item.m_equipped) {
@@ -164,16 +166,21 @@ public static class OnDeathChanges
             {
                 // we do not have enough to save all equipped items
                 // first we shuffle the equipment, so we do not delete the same items each death
-                playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetEquipment());
                 foreach (var equipment in playerEquipment)
                 {
                     if (numberOfItemsSavable > 0)
                     {
+                        if (equipment_saved >= ValConfig.MaximumEquipmentRetainedOnDeath.Value)
+                        {
+                            Jotunn.Logger.LogDebug($"Max equipment retained ({ValConfig.MaximumEquipmentRetainedOnDeath.Value}) reached, deleting {equipment.m_dropPrefab.name}");
+                            instance.m_inventory.RemoveItem(equipment);
+                            continue;
+                        }
                         Jotunn.Logger.LogDebug($"Saving equipment {equipment.m_dropPrefab.name}");
                         numberOfItemsSavable -= 1;
                         continue;
                     }
-                    instance.UnequipItem(equipment);
+                    instance.m_inventory.RemoveItem(equipment);
                 }
                 // we saved as much equipment as we could, everything else will be lost
                 instance.m_inventory.RemoveUnequipped();
@@ -205,6 +212,21 @@ public static class OnDeathChanges
 
             // Empty the inventory, we already have everything that is getting saved copied off.
             instance.m_inventory.RemoveUnequipped();
+
+
+            // Quickslot changes happen after the inventory is cleaned up to avoid overstuffing the inventory
+            if (Deathlink.AzuEPILoaded)
+            {
+                Jotunn.Logger.LogDebug($"Quickslot items found {AzuExtendedPlayerInventory.API.GetQuickSlotsItems().Count}");
+                // If the item was not saved, it should be removed from the quickslots
+                foreach (var item in AzuExtendedPlayerInventory.API.GetQuickSlotsItems())
+                {
+                    if (savedItems.Contains(item)) { continue; }
+                    Jotunn.Logger.LogDebug($"Removing quickslot item that was not saved {item.m_dropPrefab.name}");
+                    instance.UnequipItem(item);
+                    instance.m_inventory.RemoveItem(item);
+                }
+            }
 
             // Handle items that are defined in the non-skill-checked section
             // we do this right after clearing the inventory to allow creating a tombstone from the empty inventory (which can just contain our non-skill handled items)
@@ -240,14 +262,6 @@ public static class OnDeathChanges
                 instance.m_inventory.AddItem(item);
             }
 
-            //// Readd Azu Quickslot Items in their quickslot positions
-            //if (Deathlink.AzuEPILoaded)
-            //{
-            //    List<ItemDrop.ItemData> quick_slot_items = AzuExtendedPlayerInventory.API.GetQuickSlotsItems();
-            //    foreach (var item in quick_slot_items) {
-
-            //    }
-            //}
             if (ValConfig.ItemsSavedToTombstone.Value) {
                 instance.CreateTombStone();
             }
