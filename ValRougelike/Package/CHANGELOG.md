@@ -1,3 +1,9 @@
+  **0.3.3**
+---
+```
+- Update default frequency of skill gains
+```
+
   **0.3.2**
 ---
 ```
