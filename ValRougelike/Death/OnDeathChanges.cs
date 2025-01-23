@@ -160,9 +160,12 @@ public static class OnDeathChanges
                 // we'll reduce the number of items we save from our potential savable poolsize
                 Jotunn.Logger.LogDebug($"Can save all equipment.");
                 foreach (ItemDrop.ItemData equipment in playerEquipment) {
-                    RemoveEquipmentByStyle(equipment_saved, max_percent_equipment_savable, instance, equipment, savedItems);
+                    if (RemoveEquipmentByStyle(equipment_saved, max_percent_equipment_savable, instance, equipment, savedItems, numberOfItemsSavable, out numberOfItemsSavable, out equipment_saved))
+                    {
+                        // If the item is not equipped but is still equipment, it should be saved since we have space for it
+                        savedItems.Add(equipment);
+                    }
                 }
-                numberOfItemsSavable -= playerEquipment.Count;
             } else {
                 Jotunn.Logger.LogDebug($"Not enough to save all equipment.");
                 // we do not have enough to save all equipped items
@@ -170,7 +173,11 @@ public static class OnDeathChanges
                 foreach (var equipment in playerEquipment)
                 {
                     if (numberOfItemsSavable > 0) {
-                        RemoveEquipmentByStyle(equipment_saved, max_percent_equipment_savable, instance, equipment, savedItems, numberOfItemsSavable);
+                        if (RemoveEquipmentByStyle(equipment_saved, max_percent_equipment_savable, instance, equipment, savedItems, numberOfItemsSavable, out numberOfItemsSavable, out equipment_saved))
+                        {
+                            // If the item is not equipped but is still equipment, it should be saved since we have space for it
+                            savedItems.Add(equipment);
+                        }
                     } else {
                         instance.m_inventory.RemoveItem(equipment);
                     }
@@ -327,15 +334,17 @@ public static class OnDeathChanges
             }
         }
 
-        internal static void RemoveEquipmentByStyle(int equipment_saved, int max_percent_equipment_savable, Player instance, ItemDrop.ItemData equipment, List<ItemDrop.ItemData> saved_equipment, int numberOfItemsSavable = 0)
+        internal static bool RemoveEquipmentByStyle(int equipment_saved, int max_percent_equipment_savable, Player instance, ItemDrop.ItemData equipment, List<ItemDrop.ItemData> saved_equipment, int numberOfItemsSavable, out int remainingsaves, out int equipment_saved_count)
         {
+            equipment_saved_count = 0;
+            remainingsaves = 0;
             if (ValConfig.MaximumEquipmentRetainedStyle.Value == "Percentage")
             {
                 if (equipment_saved >= max_percent_equipment_savable)
                 {
                     Jotunn.Logger.LogDebug($"Max equipment retained ({max_percent_equipment_savable}) reached, deleting {equipment.m_dropPrefab.name}");
                     instance.m_inventory.RemoveItem(equipment);
-                    return;
+                    return false;
                 }
             }
             else
@@ -344,19 +353,19 @@ public static class OnDeathChanges
                 {
                     Jotunn.Logger.LogDebug($"Max equipment retained ({ValConfig.MaximumEquipmentRetainedOnDeath.Value}) reached, deleting {equipment.m_dropPrefab.name}");
                     instance.m_inventory.RemoveItem(equipment);
-                    return;
+                    return false;
                 }
             }
 
             Jotunn.Logger.LogDebug($"Saving equipment remaining savable?({numberOfItemsSavable}) {equipment.m_dropPrefab.name}");
-            equipment_saved = equipment_saved + 1;
-            numberOfItemsSavable = numberOfItemsSavable - 1;
+            equipment_saved_count = equipment_saved + 1;
+            remainingsaves = numberOfItemsSavable - 1;
             if (equipment.m_equipped)
             {
-                return;
+                // don't need to save equipped items
+                return false;
             }
-            // If the item is not equipped but is still equipment, it should be saved since we have space for it
-            saved_equipment.Add(equipment);
+            return true;
         }
     }
 }
