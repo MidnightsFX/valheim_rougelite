@@ -1,3 +1,9 @@
+  **0.3.4**
+---
+```
+- Fix non-skill checked items being processed incorrectly
+```
+
   **0.3.3**
 ---
 ```
