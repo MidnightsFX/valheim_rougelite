@@ -1,3 +1,13 @@
+  **0.4.0**
+---
+```
+- Added MaxPercentResourcesRetainedOnDeath which provides an alternative to MaximumEquipmentRetainedOnDeath and can the behavior between the two can be toggled with MaximumEquipmentRetainedStyle
+	- This allows for scaling of the amount of equipment saved for a variety of different playstyles, and the option for more linear progression between the start of the game to the end of the game
+- Fixes an edgecase for retaining food on death
+- Fixes an edgecase for retaining items on death that would result in the player retaining less items than intended
+- Added DeathSkillPercentageStyle which allows for scaling of saved items based on total player inventory size and not just items in the players inventory
+```
+
   **0.3.4**
 ---
 ```
