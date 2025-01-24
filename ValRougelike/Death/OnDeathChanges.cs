@@ -120,19 +120,28 @@ public static class OnDeathChanges
             if (ValConfig.DeathSkillPercentageStyle.Value == "InventorySize")
             {
                 int inventory_size = instance.m_inventory.m_width * instance.m_inventory.m_height;
-                Jotunn.Logger.LogDebug($"Inventory size {instance.m_inventory.m_width} * {instance.m_inventory.m_height}");
+                Jotunn.Logger.LogDebug($"Inventory size {instance.m_inventory.m_width} * {instance.m_inventory.m_height} = {instance.m_inventory.m_width * instance.m_inventory.m_height}");
                 //if (Deathlink.AzuEPILoaded) {
                 //    int azu_inventory_add = AzuExtendedPlayerInventory.API.GetSlots().SlotNames.Count();
                 //    inventory_size += azu_inventory_add;
                 //    Jotunn.Logger.LogDebug($"Azu inventory increasing total inventory size by {azu_inventory_add}");
                 //}
 
-                numberOfItemsSavable = (int)(inventory_size * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus()) + ValConfig.MinimumEquipmentRetainedOnDeath.Value;
+                numberOfItemsSavable = (int)(inventory_size * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
             } else {
-                numberOfItemsSavable = (int)(playerItems.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus()) + ValConfig.MinimumEquipmentRetainedOnDeath.Value;
+                numberOfItemsSavable = (int)(playerItems.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
             }
-            
-            Jotunn.Logger.LogDebug($"Player number of items {playerItems.Count}, savable due to skill {numberOfItemsSavable}");
+
+            if (numberOfItemsSavable < ValConfig.MinimumEquipmentRetainedOnDeath.Value) {
+                numberOfItemsSavable += ValConfig.MinimumEquipmentRetainedOnDeath.Value;
+            }
+
+            // equipment specific
+            List<ItemDrop.ItemData> playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetEquipment());
+            int max_equipment_savable = (int)(playerEquipment.Count * (ValConfig.MaximumPercentEquipmentRetainedOnDeath.Value / 100));
+            int max_eq_savable_by_type = max_equipment_savable;
+            if (ValConfig.MaximumEquipmentRetainedStyle.Value == "AbsoluteValue") { max_eq_savable_by_type = ValConfig.MaximumEquipmentRetainedOnDeath.Value; }
+            Jotunn.Logger.LogDebug($"Player number of items {playerItems.Count}, savable due to skill {numberOfItemsSavable} (max equipment saves {max_eq_savable_by_type})");
             if (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value < ((float)numberOfItemsSavable / playerItems.Count))
             {
                 numberOfItemsSavable = (int)(playerItems.Count * (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value / 100));
@@ -152,8 +161,6 @@ public static class OnDeathChanges
             }
 
             // Equipment items are handled differently than resources etc
-            List <ItemDrop.ItemData> playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetEquipment());
-            int max_percent_equipment_savable = (int)(playerEquipment.Count * (ValConfig.MaximumPercentEquipmentRetainedOnDeath.Value / 100));
             int equipment_saved = 0;
             if (playerEquipment.Count <= numberOfItemsSavable)
             {
@@ -161,7 +168,7 @@ public static class OnDeathChanges
                 // we'll reduce the number of items we save from our potential savable poolsize
                 Jotunn.Logger.LogDebug($"Can save all equipment.");
                 foreach (ItemDrop.ItemData equipment in playerEquipment) {
-                    if (RemoveEquipmentByStyle(equipment_saved, max_percent_equipment_savable, instance, equipment, savedItems, numberOfItemsSavable, out numberOfItemsSavable, out equipment_saved))
+                    if (RemoveEquipmentByStyle(equipment_saved, max_equipment_savable, instance, equipment, savedItems, numberOfItemsSavable, out numberOfItemsSavable, out equipment_saved))
                     {
                         // If the item is not equipped but is still equipment, it should be saved since we have space for it
                         savedItems.Add(equipment);
@@ -174,7 +181,7 @@ public static class OnDeathChanges
                 foreach (var equipment in playerEquipment)
                 {
                     if (numberOfItemsSavable > 0) {
-                        if (RemoveEquipmentByStyle(equipment_saved, max_percent_equipment_savable, instance, equipment, savedItems, numberOfItemsSavable, out numberOfItemsSavable, out equipment_saved))
+                        if (RemoveEquipmentByStyle(equipment_saved, max_equipment_savable, instance, equipment, savedItems, numberOfItemsSavable, out numberOfItemsSavable, out equipment_saved))
                         {
                             // If the item is not equipped but is still equipment, it should be saved since we have space for it
                             savedItems.Add(equipment);
@@ -344,15 +351,19 @@ public static class OnDeathChanges
             }
         }
 
-        internal static bool RemoveEquipmentByStyle(int equipment_saved, int max_percent_equipment_savable, Player instance, ItemDrop.ItemData equipment, List<ItemDrop.ItemData> saved_equipment, int numberOfItemsSavable, out int remainingsaves, out int equipment_saved_count)
+        internal static bool RemoveEquipmentByStyle(int equipment_saved, int max_equipment_savable, Player instance, ItemDrop.ItemData equipment, List<ItemDrop.ItemData> saved_equipment, int numberOfItemsSavable, out int remainingsaves, out int equipment_saved_count)
         {
             equipment_saved_count = 0;
             remainingsaves = 0;
+            if (numberOfItemsSavable <= 0) {
+                return false;
+            }
+            
             if (ValConfig.MaximumEquipmentRetainedStyle.Value == "Percentage")
             {
-                if (equipment_saved >= max_percent_equipment_savable)
+                if (equipment_saved >= max_equipment_savable)
                 {
-                    Jotunn.Logger.LogDebug($"Max equipment retained ({max_percent_equipment_savable}) reached, deleting {equipment.m_dropPrefab.name}");
+                    Jotunn.Logger.LogDebug($"Max equipment retained ({max_equipment_savable}) reached, deleting {equipment.m_dropPrefab.name}");
                     instance.m_inventory.RemoveItem(equipment);
                     return false;
                 }

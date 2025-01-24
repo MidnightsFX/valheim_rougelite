@@ -31,7 +31,7 @@ public static class DeathProgressionSkill
     }
 
 
-    public static float DeathSkillCalculatePercentWithBonus(float bonus = 0.0f, float min = 0.1f, float max = 1.0f)
+    public static float DeathSkillCalculatePercentWithBonus(float bonus = 0.0f, float min = 0.01f, float max = 1.0f)
     {
         float percentage = 0f;
         if (Player.m_localPlayer != null)
