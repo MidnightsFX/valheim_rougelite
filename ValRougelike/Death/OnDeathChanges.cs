@@ -71,7 +71,7 @@ public static class OnDeathChanges
         {
             if (ValConfig.FoodLossOnDeath.Value)
             {
-                if (ValConfig.FoodLossOnDeathBySkillLevel.Value)
+                if (ValConfig.FoodLossOnDeathBySkillLevel.Value && instance.m_foods.Count > 0)
                 {
                     float skill_level = DeathProgressionSkill.DeathSkillCalculatePercentWithBonus();
                     if (skill_level >= 0.9f)
@@ -85,7 +85,7 @@ public static class OnDeathChanges
                     else if (skill_level > 0.3f && skill_level < 0.6f)
                     {
                         instance.m_foods.Remove(instance.m_foods[0]);
-                        instance.m_foods.Remove(instance.m_foods[0]);
+                        if (instance.m_foods.Count > 0) { instance.m_foods.Remove(instance.m_foods[0]); }
                     }
                     else
                     {
@@ -120,11 +120,12 @@ public static class OnDeathChanges
             if (ValConfig.DeathSkillPercentageStyle.Value == "InventorySize")
             {
                 int inventory_size = instance.m_inventory.m_width * instance.m_inventory.m_height;
-                if (Deathlink.AzuEPILoaded) {
-                    int azu_quickslots = AzuExtendedPlayerInventory.API.GetQuickSlots().SlotNames.Count();
-                    inventory_size += azu_quickslots;
-                    Jotunn.Logger.LogDebug($"Azu quickslots increasing total inventory size by {azu_quickslots}");
-                }
+                Jotunn.Logger.LogDebug($"Inventory size {instance.m_inventory.m_width} * {instance.m_inventory.m_height}");
+                //if (Deathlink.AzuEPILoaded) {
+                //    int azu_inventory_add = AzuExtendedPlayerInventory.API.GetSlots().SlotNames.Count();
+                //    inventory_size += azu_inventory_add;
+                //    Jotunn.Logger.LogDebug($"Azu inventory increasing total inventory size by {azu_inventory_add}");
+                //}
 
                 numberOfItemsSavable = (int)(inventory_size * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus()) + ValConfig.MinimumEquipmentRetainedOnDeath.Value;
             } else {
@@ -184,6 +185,13 @@ public static class OnDeathChanges
                 }
                 // we saved as much equipment as we could, everything else will be lost
                 instance.m_inventory.RemoveUnequipped();
+
+                Jotunn.Logger.LogDebug($"Returning {savedItems.Count} items on death");
+                foreach (var item in savedItems)
+                {
+                    // might need to check if we actually can add the item here
+                    instance.m_inventory.AddItem(item);
+                }
                 return;
             }
 
@@ -256,6 +264,8 @@ public static class OnDeathChanges
                     savedItems.AddRange(playerNonSkillCheckItems);
                     break;
             }
+
+            Jotunn.Logger.LogDebug($"Returning {savedItems.Count} items on death");
             foreach (var item in savedItems)
             {
                 // might need to check if we actually can add the item here
