@@ -12,6 +12,8 @@
 - Fixes an edgecase for retaining food on death
 - Fixes an edgecase for retaining items on death that would result in the player retaining less items than intended
 - Added DeathSkillPercentageStyle which allows for scaling of saved items based on total player inventory size and not just items in the players inventory
+- Lowered the skill floor for item loss, particularly impactful for extremely large inventories (80+)
+- Increased base XP rate for all activities
 ```
 
   **0.3.4**
