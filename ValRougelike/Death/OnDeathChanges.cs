@@ -3,7 +3,6 @@ using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 using Deathlink.Common;
-using System.ComponentModel;
 
 namespace Deathlink.Death;
 

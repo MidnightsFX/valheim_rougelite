@@ -1,3 +1,9 @@
+  **0.4.1**
+---
+```
+- Fix minimap marker on death NPE
+```
+
   **0.4.0**
 ---
 ```
