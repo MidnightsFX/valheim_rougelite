@@ -65,7 +65,7 @@ public static class DeathProgressionSkill
                 _mineAmount = profile.m_playerStats.m_stats[PlayerStatType.Mines];
                 _craftAndUpgrades = profile.m_playerStats.m_stats[PlayerStatType.CraftsOrUpgrades];
             }
-            Jotunn.Logger.LogDebug($"DeathSkill increase interval check: {timeSinceGameStart} > {lastSkillIncreaseTickTime}");
+            // Jotunn.Logger.LogDebug($"DeathSkill increase interval check: {timeSinceGameStart} > {lastSkillIncreaseTickTime}");
             if (timeSinceGameStart > lastSkillIncreaseTickTime)
             {
                 // set when we should tick the next increase

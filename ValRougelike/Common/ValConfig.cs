@@ -9,6 +9,7 @@ public class ValConfig
     public static ConfigEntry<bool> EnableDebugMode;
     public static ConfigEntry<string> ItemsNotSkillCheckedAction;
     public static ConfigEntry<string> ItemsNotSkillChecked;
+    public static ConfigEntry<string> ItemsFailingSkillCheckAction;
     public static ConfigEntry<float> DeathSkillPerLevelBonus;
     public static ConfigEntry<int> MinimumEquipmentRetainedOnDeath;
     public static ConfigEntry<int> MaximumEquipmentRetainedOnDeath;
@@ -16,7 +17,11 @@ public class ValConfig
     public static ConfigEntry<float> MaxPercentTotalItemsRetainedOnDeath;
     public static ConfigEntry<float> MaximumPercentEquipmentRetainedOnDeath;
     public static ConfigEntry<float> GainedSkillLossFactor;
-    public static ConfigEntry<bool> OnlyXPLossFromSkillGains;
+    public static ConfigEntry<bool> EnableXPLossFromGainedXP;
+    public static ConfigEntry<string> SkillsWithoutDeathPenalty;
+    public static ConfigEntry<string> SkillsWithoutGainDeathPenalty;
+    public static ConfigEntry<bool> EnableSkillsXPLossOnDeath;
+    public static ConfigEntry<float> DeathXPLoss;
     public static ConfigEntry<float> SkillGainOnKills;
     public static ConfigEntry<float> SkillGainOnBossKills;
     public static ConfigEntry<float> SkillGainOnCrafts;
@@ -55,15 +60,23 @@ public class ValConfig
             "The maximum number that all of the skill based percentage rolls will use. Either the max number of items carryable or the number of items you currently have.",
             new AcceptableValueList<string>("InventorySize", "CurrentItems"));
         MaximumEquipmentRetainedStyle = BindServerConfig("DeathProgression", "MaximumEquipmentRetainedStyle", "Percentage", "Whether the maximum amount of equipment saved is an absolute value, or a percentage", new AcceptableValueList<string>("Percentage", "AbsoluteValue"));
+        ItemsFailingSkillCheckAction = BindServerConfig("DeathProgression", "ItemsFailingSkillCheckAction", "DropOnDeath",
+            "What happens to items that fail the skill check. DropOnDeath = placed into a tombstone on death (like vanilla), Destroy = Items are destroyed.",
+            new AcceptableValueList<string>("DropOnDeath", "Destroy"));
 
         ItemsNotSkillChecked = BindServerConfig("DeathProgression", "ItemsNotSkillChecked", "Tin,TinOre,Copper,CopperOre,CopperScrap,Bronze,Iron,IronScrap,Silver,SilverOre,DragonEgg,chest_hildir1,chest_hildir2,chest_hildir3,BlackMetal,BlackMetalScrap,DvergrNeedle,MechanicalSpring,FlametalNew,FlametalOreNew", "List of items that are not rolled to be saved through death progression.");
         ItemsNotSkillCheckedAction = BindServerConfig("DeathProgression", "ItemsNotSkillCheckedAction", "dropOnDeath", 
             "What happens to non-teleportable items. DropOnDeath = placed into a tombstone on death, AlwaysDestroy = never saved, AlwaysSave = These items are never destroyed and do not count towards save limits.", 
             new AcceptableValueList<string>("DropOnDeath", "AlwaysDestroy", "AlwaysSave"));
 
-        OnlyXPLossFromSkillGains = BindServerConfig("SkillLossModifiers", "OnlyXPLossFromSkillGains", true, "When enabled, you can only loose XP gained since the last death. Repeated deaths regardless of time without skill gains will not result in XP loss.");
-        GainedSkillLossFactor = BindServerConfig("SkillLossModifiers", "GainedSkillLossFactor", 0.2f, "The percentage of skills that are lost when dying.", false, 0f, 1f);
-        
+        EnableXPLossFromGainedXP = BindServerConfig("SkillLossModifiers", "EnableXPLossFromGainedXP", true, "When enabled, you loose XP gained since the last death. Repeated deaths regardless of time without skill gains will not result in XP loss, unless EnableSkillsXPLossOnDeath is true.");
+        GainedSkillLossFactor = BindServerConfig("SkillLossModifiers", "GainedSkillLossFactor", 0.2f, "The percentage of skills gains since last death that are lost when dying.", false, 0f, 1f);
+        EnableSkillsXPLossOnDeath = BindServerConfig("SkillLossModifiers", "EnableSkillsXPLossOnDeath", true, "When enabled, you will lose a configurable percentage of XP across all skills on death (this is just like vanilla, but configurable).");
+        DeathXPLoss = BindServerConfig("SkillLossModifiers", "DeathXPLoss", 0.02f, "The percentage of skills that are lost when dying (vanilla is 0.05).", false, 0f, 1f);
+        SkillsWithoutDeathPenalty = BindServerConfig("SkillLossModifiers", "SkillsWithoutDeathPenalty", "Deathlink,Woodcutting,Mining,Pickaxe,Farming,Crafting", "List of skills that are not penalized on death.");
+        SkillsWithoutDeathPenalty.SettingChanged += Death.SkillsChanges.SkillsWithoutDeathPenaltyChange;
+        SkillsWithoutGainDeathPenalty = BindServerConfig("SkillLossModifiers", "SkillsWithoutGainDeathPenalty", "Deathlink", "List of skills that will not have their skill gains reduced on death.");
+        SkillsWithoutGainDeathPenalty.SettingChanged += Death.SkillsChanges.SkillsWithoutGainDeathPenaltyChange;
 
         SkillGainOnKills = BindServerConfig("DeathSkillGain", "SkillGainOnKills", 5f, "Skill Gain from killing non-boss creatures.");
         SkillGainOnBossKills = BindServerConfig("DeathSkillGain", "SkillGainOnBossKills", 20f, "Skill Gain from killing boss creatures.");

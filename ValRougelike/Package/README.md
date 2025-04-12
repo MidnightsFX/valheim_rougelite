@@ -1,12 +1,8 @@
 # Deathlink - Rougelike Control
-The goal of this mod is to provide a progression based alternative to the current extremes in the scenario of an unlikely death. 
+The goal of this mod is to provide a progression based alternative to the current extremes in the scenario of an unlikely death.
 
 Valheim supports a variety of configuration options through world modifiers, checkout the [Death Penalty](https://valheim.fandom.com/wiki/World_Modifiers#Death_Penalty) modifier. However, these modifiers are global, and static.
 I wanted a system that is influencible by the player themselves, as is the case in some rougelike games you can invest in ways to preserve more and more of your progress in one way or another.
-
-I also wanted a mod which would support multiple categories of outcomes for a variety of equipment, resources, and/or valuables. 
-I made this because I wanted a solution that would not result in a corpse run for a no-map server, but wouldn't be as harsh as to delete all the users items, or as lenient as to save all equipment or items.
-The outcome however is something which provides a bit more flexibility and gives the user a progression that feels meaningful. Deaths later in the game after hours of work are less painful because you loose less.
 
 ### This mod is in development!
 
@@ -17,18 +13,15 @@ Got a bug to report or just want to chat about the mod? Drop by the discord or g
 I have a number of things that I plan on adding. While the existing mod is functional by itself and things should work as intended there are plenty of things that could change.
 
 ### Future Plans
-- More flexibility in how skill and item loss is managed
 - Individual player configuration (make it easy mode for your friend who is struggling)
 - UI modifications to provide feedback on how much or little XP for a skill would be lost by dying
-- Bonus Resources based on survival skill (offset losses from item deletion)
 - Bonus XP for other skills based on survival
-- Integrations for the various extended inventory mods
 
 ## What this mod does
 
 - Controls which resources are dropped or destroyed on death
 - Controls how much equipment is dropped or destroyed on death
-- Controls skill loss, prevents skills from degrading past a previous point
+- Controls skill loss, prevents skills from degrading past a previous point, how much skills degrade on death, and which skills experiance loss
 - Rewards the player for staying alive, build, fighting, crafting, and harvesting
 
 **What does that look like?**

@@ -1,3 +1,15 @@
+  **0.5.0**
+---
+```
+- Adds a system to allow configuring skill reduction rates on death
+	- Skills can now be configured to be reduced by a percentage, like vanilla
+	- Skills GAINS since the last death can also be reduced by a configurable percentage
+	- Skills which can lose XP can be configured
+		- Configure which skills do not loose gained XP
+		- Configure which skills do not loose XP on death
+- 
+```
+
   **0.4.1**
 ---
 ```
