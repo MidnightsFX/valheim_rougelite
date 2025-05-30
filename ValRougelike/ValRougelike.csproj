@@ -81,6 +81,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <EmbeddedResource Include="AssetsEmbedded\deathless" />
+    <EmbeddedResource Include="Localizations\English.json" />
     <None Include="packages.config" />
     <None Include="Package\CHANGELOG.md" />
     <None Include="README.md" />

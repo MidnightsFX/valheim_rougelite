@@ -1,3 +1,22 @@
+  **0.5.3**
+---
+```
+- Refresh inventory state to prevent ghost items
+```
+
+  **0.5.2**
+---
+```
+- Added localization and external localization support (Bepinex/config/Deathlink/localization)
+```
+
+  **0.5.1**
+---
+```
+- Fixes an issue that would prevent saving any equipment
+- Changes the default maximum equipment saved style to be an absolute value (this will not change existing configs)
+```
+
   **0.5.0**
 ---
 ```

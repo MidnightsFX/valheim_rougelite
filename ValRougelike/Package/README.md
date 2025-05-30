@@ -4,6 +4,10 @@ The goal of this mod is to provide a progression based alternative to the curren
 Valheim supports a variety of configuration options through world modifiers, checkout the [Death Penalty](https://valheim.fandom.com/wiki/World_Modifiers#Death_Penalty) modifier. However, these modifiers are global, and static.
 I wanted a system that is influencible by the player themselves, as is the case in some rougelike games you can invest in ways to preserve more and more of your progress in one way or another.
 
+### Localization
+External localization can be configured at `BepInEx\config\Deathlink\localizations`. This folder and the default localization will be generated and added the first time this mod runs.
+New localization keys will be added to localization files as they are added to the mod. Existing localization keys will not be changed, so your localization customizations are safe.
+
 ### This mod is in development!
 
 Got a bug to report or just want to chat about the mod? Drop by the discord or github.
@@ -15,7 +19,6 @@ I have a number of things that I plan on adding. While the existing mod is funct
 ### Future Plans
 - Individual player configuration (make it easy mode for your friend who is struggling)
 - UI modifications to provide feedback on how much or little XP for a skill would be lost by dying
-- Bonus XP for other skills based on survival
 
 ## What this mod does
 

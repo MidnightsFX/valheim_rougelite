@@ -48,11 +48,6 @@ public static class OnDeathChanges
             }
             __instance.Message(MessageHud.MessageType.Center, "$msg_youdied");
             __instance.ShowTutorial("death");
-
-            // Whether or not to spawn the death marker on the map
-            if (ValConfig.ShowDeathMapMarker.Value) {
-                Minimap.instance.AddPin(__instance.transform.position, Minimap.PinType.Death, $"$hud_mapday {EnvMan.instance.GetDay(ZNet.instance.GetTimeSeconds())}", save: true, isChecked: false, 0L);
-            }
             
             if (__instance.m_onDeath != null){
                 __instance.m_onDeath();
@@ -104,6 +99,7 @@ public static class OnDeathChanges
             List<ItemDrop.ItemData> playerItems = instance.m_inventory.GetAllItems();
             List<ItemDrop.ItemData> playerNonSkillCheckItems = new List<ItemDrop.ItemData>();
             List<ItemDrop.ItemData> playerItemsWithoutNonSkillCheckedItems = new List<ItemDrop.ItemData>();
+            Inventory inventory = instance.m_inventory;
 
             List<ItemDrop.ItemData> playerItemsRemoved = new List<ItemDrop.ItemData>();
 
@@ -216,24 +212,28 @@ public static class OnDeathChanges
                     instance.UnequipItem(item);
                     instance.m_inventory.RemoveItem(item);
                 }
+                inventory.Changed();
             }
 
             // Handle items that are defined in the non-skill-checked section
             // we do this right after clearing the inventory to allow creating a tombstone from the empty inventory (which can just contain our non-skill handled items)
             switch (ValConfig.ItemsNotSkillCheckedAction.Value) {
                 case "DropOnDeath":
-                    Jotunn.Logger.LogDebug("Dropping non-skill-checked items on death");
-                    foreach (var item in playerNonSkillCheckItems) {
-                        // might need to check if we actually can add the item here
-                        instance.m_inventory.AddItem(item);
+                    if (playerNonSkillCheckItems.Count > 0) {
+                        Jotunn.Logger.LogDebug("Dropping non-skill-checked items on death");
+                        foreach (var item in playerNonSkillCheckItems) {
+                            // might need to check if we actually can add the item here
+                            instance.m_inventory.AddItem(item);
+                        }
+                        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(instance.m_tombstone, instance.GetCenterPoint(), instance.transform.rotation);
+                        gameObject.GetComponent<Container>().GetInventory().MoveInventoryToGrave(instance.m_inventory);
+                        TombStone component = gameObject.GetComponent<TombStone>();
+                        PlayerProfile playerProfile = Game.instance.GetPlayerProfile();
+                        string name = playerProfile.GetName();
+                        long playerId = playerProfile.GetPlayerID();
+                        component.Setup(name, playerId);
+                        inventory.Changed();
                     }
-                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(instance.m_tombstone, instance.GetCenterPoint(), instance.transform.rotation);
-                    gameObject.GetComponent<Container>().GetInventory().MoveInventoryToGrave(instance.m_inventory);
-                    TombStone component = gameObject.GetComponent<TombStone>();
-                    PlayerProfile playerProfile = Game.instance.GetPlayerProfile();
-                    string name = playerProfile.GetName();
-                    long playerId = playerProfile.GetPlayerID();
-                    component.Setup(name, playerId);
                     break;
                 case "AlwaysDestroy":
                     Jotunn.Logger.LogDebug("Destroying non-skill-checked items on death");
@@ -245,27 +245,41 @@ public static class OnDeathChanges
                     break;
             }
 
-            Jotunn.Logger.LogDebug($"Setting up tombstone {savedItems.Count} items on death");
-            if (ValConfig.ItemsFailingSkillCheckAction.Value == "DropOnDeath") {
+            bool tombstoneCreated = false;
+            if (ValConfig.ItemsFailingSkillCheckAction.Value == "DropOnDeath" && playerItemsRemoved.Count > 0) {
+                Jotunn.Logger.LogDebug($"Items failed skillcheck {playerItemsRemoved.Count} items on death, dropping to tombestone.");
                 foreach (var item in playerItemsRemoved){
                     // might need to check if we actually can add the item here
                     if (instance.m_inventory.CanAddItem(item.m_dropPrefab)){
                         instance.m_inventory.AddItem(item);
                     }
                 }
+                tombstoneCreated = true;
                 instance.CreateTombStone();
+                inventory.Changed();
             }
 
-            Jotunn.Logger.LogDebug($"Returning {savedItems.Count} items on death");
-            foreach (var item in savedItems) {
-                // might need to check if we actually can add the item here
-                instance.m_inventory.AddItem(item);
+            if (savedItems.Count > 0) {
+                Jotunn.Logger.LogDebug($"Returning {savedItems.Count} items on death");
+                foreach (var item in savedItems) {
+                    // might need to check if we actually can add the item here
+                    instance.m_inventory.AddItem(item);
+                }
+                if (ValConfig.ItemsSavedToTombstone.Value) {
+                    tombstoneCreated = true;
+                    instance.CreateTombStone();
+                }
+                inventory.Changed();
             }
 
-            if (ValConfig.ItemsSavedToTombstone.Value) {
-                instance.CreateTombStone();
+            // Whether or not to spawn the death marker on the map
+            if (ValConfig.ShowDeathMapMarker.Value && tombstoneCreated)
+            {
+                Minimap.instance.AddPin(instance.transform.position, Minimap.PinType.Death, $"$hud_mapday {EnvMan.instance.GetDay(ZNet.instance.GetTimeSeconds())}", save: true, isChecked: false, 0L);
             }
         }
+
+
 
         public static void OnDeathStat(Player instance)
         {
@@ -361,10 +375,6 @@ public static class OnDeathChanges
             Jotunn.Logger.LogDebug($"Saving equipment remaining savable?({numberOfItemsSavable}) {equipment.m_dropPrefab.name}");
             equipment_saved_count = equipment_saved + 1;
             remainingsaves = numberOfItemsSavable - 1;
-            if (equipment.m_equipped) {
-                // don't need to save equipped items
-                return false;
-            }
             return true;
         }
     }

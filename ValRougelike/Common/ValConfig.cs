@@ -59,7 +59,7 @@ public class ValConfig
         DeathSkillPercentageStyle = BindServerConfig("DeathProgression", "DeathSkillPercentageStyle", "InventorySize",
             "The maximum number that all of the skill based percentage rolls will use. Either the max number of items carryable or the number of items you currently have.",
             new AcceptableValueList<string>("InventorySize", "CurrentItems"));
-        MaximumEquipmentRetainedStyle = BindServerConfig("DeathProgression", "MaximumEquipmentRetainedStyle", "Percentage", "Whether the maximum amount of equipment saved is an absolute value, or a percentage", new AcceptableValueList<string>("Percentage", "AbsoluteValue"));
+        MaximumEquipmentRetainedStyle = BindServerConfig("DeathProgression", "MaximumEquipmentRetainedStyle", "AbsoluteValue", "Whether the maximum amount of equipment saved is an absolute value, or a percentage", new AcceptableValueList<string>("Percentage", "AbsoluteValue"));
         ItemsFailingSkillCheckAction = BindServerConfig("DeathProgression", "ItemsFailingSkillCheckAction", "DropOnDeath",
             "What happens to items that fail the skill check. DropOnDeath = placed into a tombstone on death (like vanilla), Destroy = Items are destroyed.",
             new AcceptableValueList<string>("DropOnDeath", "Destroy"));

@@ -22,8 +22,8 @@ public static class DeathProgressionSkill
     public static void SetupDeathSkill()
     {
         SkillConfig deathskill = new SkillConfig();
-        deathskill.Name = "Deathlink";
-        deathskill.Description = "How apt you are at avoiding loss from death.";
+        deathskill.Name = LocalizationManager.Instance.TryTranslate("$death_skill");
+        deathskill.Description = LocalizationManager.Instance.TryTranslate("$death_skill_description");
         deathskill.Icon = Deathlink.EmbeddedResourceBundle.LoadAsset<Sprite>("Assets/Custom/Icons/death_skill.png"); ;
         deathskill.Identifier = "midnightsfx.deathskill";
         deathskill.IncreaseStep = 0.1f;
