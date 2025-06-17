@@ -9,6 +9,7 @@ namespace Deathlink.Death;
 public static class OnDeathChanges
 {
     [HarmonyPatch(typeof(Player), nameof(Player.OnDeath))]
+    [HarmonyPriority(Priority.LowerThanNormal)]
     static class OnDeath_Tombstone_Patch
     {
         private static bool Prefix(Player __instance)
@@ -102,8 +103,10 @@ public static class OnDeathChanges
             Inventory inventory = instance.m_inventory;
 
             List<ItemDrop.ItemData> playerItemsRemoved = new List<ItemDrop.ItemData>();
+            List<ItemDrop.ItemData> itemsToDrop = new List<ItemDrop.ItemData>();
 
-            List<ItemDrop.ItemData> itemsToRemoveBeforeDeath = new List<ItemDrop.ItemData>();
+            GameObject tombstoneGo = null;
+            TombStone tombstone = null;
 
             string[] nonSkillCheckedItems = ValConfig.ItemsNotSkillChecked.Value.Split(',');
             foreach (ItemDrop.ItemData item in playerItems)
@@ -115,16 +118,9 @@ public static class OnDeathChanges
                 }
             }
             int numberOfItemsSavable = 0;
-            if (ValConfig.DeathSkillPercentageStyle.Value == "InventorySize")
-            {
+            if (ValConfig.DeathSkillPercentageStyle.Value == "InventorySize") {
                 int inventory_size = instance.m_inventory.m_width * instance.m_inventory.m_height;
                 Jotunn.Logger.LogDebug($"Inventory size {instance.m_inventory.m_width} * {instance.m_inventory.m_height} = {instance.m_inventory.m_width * instance.m_inventory.m_height}");
-                //if (Deathlink.AzuEPILoaded) {
-                //    int azu_inventory_add = AzuExtendedPlayerInventory.API.GetSlots().SlotNames.Count();
-                //    inventory_size += azu_inventory_add;
-                //    Jotunn.Logger.LogDebug($"Azu inventory increasing total inventory size by {azu_inventory_add}");
-                //}
-
                 numberOfItemsSavable = (int)(inventory_size * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
             } else {
                 numberOfItemsSavable = (int)(playerItems.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
@@ -150,7 +146,6 @@ public static class OnDeathChanges
                 foreach (ItemDrop.ItemData item in AzuExtendedPlayerInventory.API.GetQuickSlotsItems()) {
                     if (nonSkillCheckedItems.Contains(item.m_shared.m_name)) {
                         playerNonSkillCheckItems.Add(item);
-                        itemsToRemoveBeforeDeath.Add(item);
                     } else {
                         playerItemsWithoutNonSkillCheckedItems.Add(item);
                     }
@@ -164,18 +159,16 @@ public static class OnDeathChanges
                     if (RemoveEquipmentByStyle(equipment_saved, max_equipment_savable, instance, equipment, savedItems, numberOfItemsSavable, playerItemsRemoved, out numberOfItemsSavable, out equipment_saved)) {
                         // If the item is not equipped but is still equipment, it should be saved since we have space for it
                         savedItems.Add(equipment);
-                        itemsToRemoveBeforeDeath.Add(equipment);
                     }
                 } else {
                     playerItemsRemoved.Add(equipment);
-                    itemsToRemoveBeforeDeath.Add(equipment);
                 }
             }
 
             // we still have savable space after saving any equipped items
+            List<ItemDrop.ItemData> nonEquippableItems = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetNotEquipment());
             if (numberOfItemsSavable > 0) {
                 // shuffle inventory items that are not equipment
-                List<ItemDrop.ItemData> nonEquippableItems = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetNotEquipment());
                 int max_number_resources_savable = (int)(ValConfig.MaxPercentResourcesRetainedOnDeath.Value * nonEquippableItems.Count);
                 foreach (var item in nonEquippableItems) {
                     if (numberOfItemsSavable > 0 && max_number_resources_savable > 0) {
@@ -184,19 +177,12 @@ public static class OnDeathChanges
                         numberOfItemsSavable -= 1;
                         max_number_resources_savable -= 1;
                     } else {
-                        break;
+                        playerItemsRemoved.Add(item);
                     }
                 }
+            } else {
+                playerItemsRemoved.AddRange(nonEquippableItems);
             }
-
-            // Empty the inventory, we already have everything that is getting saved copied off.
-            // mark all of the items that will be in the removed list
-            foreach (var item in instance.m_inventory.GetAllItems()) {
-                if (item.m_equipped != true && !item.m_shared.m_questItem) {
-                    playerItemsRemoved.Add(item);
-                }
-            }
-            instance.m_inventory.RemoveAll();
 
 
             // Quickslot changes happen after the inventory is cleaned up to avoid overstuffing the inventory
@@ -212,74 +198,78 @@ public static class OnDeathChanges
                     instance.UnequipItem(item);
                     instance.m_inventory.RemoveItem(item);
                 }
-                inventory.Changed();
             }
 
             // Handle items that are defined in the non-skill-checked section
             // we do this right after clearing the inventory to allow creating a tombstone from the empty inventory (which can just contain our non-skill handled items)
             switch (ValConfig.ItemsNotSkillCheckedAction.Value) {
                 case "DropOnDeath":
-                    if (playerNonSkillCheckItems.Count > 0) {
-                        Jotunn.Logger.LogDebug("Dropping non-skill-checked items on death");
-                        foreach (var item in playerNonSkillCheckItems) {
-                            // might need to check if we actually can add the item here
-                            instance.m_inventory.AddItem(item);
-                        }
-                        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(instance.m_tombstone, instance.GetCenterPoint(), instance.transform.rotation);
-                        gameObject.GetComponent<Container>().GetInventory().MoveInventoryToGrave(instance.m_inventory);
-                        TombStone component = gameObject.GetComponent<TombStone>();
-                        PlayerProfile playerProfile = Game.instance.GetPlayerProfile();
-                        string name = playerProfile.GetName();
-                        long playerId = playerProfile.GetPlayerID();
-                        component.Setup(name, playerId);
-                        inventory.Changed();
-                    }
+                    Jotunn.Logger.LogDebug($"Dropping non-skill-checked items on death ({playerNonSkillCheckItems.Count()})");
+                    itemsToDrop.AddRange(playerNonSkillCheckItems);
                     break;
                 case "AlwaysDestroy":
-                    Jotunn.Logger.LogDebug("Destroying non-skill-checked items on death");
-                    // we do nothing, these items will be destroyed
+                    Jotunn.Logger.LogDebug($"Destroying non-skill-checked items on death ({playerNonSkillCheckItems.Count()})");
+                    playerItemsRemoved.AddRange(playerNonSkillCheckItems);
                     break;
                 case "AlwaysSave":
-                    Jotunn.Logger.LogDebug("Saving non-skill-checked items on death");
+                    Jotunn.Logger.LogDebug($"Saving non-skill-checked items on death ({playerNonSkillCheckItems.Count()})");
                     savedItems.AddRange(playerNonSkillCheckItems);
                     break;
+            }
+
+            // Empty the inventory, we already have everything that is getting saved copied off.
+            foreach (var item in playerItemsRemoved) {
+                instance.m_inventory.RemoveItem(item);
             }
 
             bool tombstoneCreated = false;
             if (ValConfig.ItemsFailingSkillCheckAction.Value == "DropOnDeath" && playerItemsRemoved.Count > 0) {
                 Jotunn.Logger.LogDebug($"Items failed skillcheck {playerItemsRemoved.Count} items on death, dropping to tombestone.");
-                foreach (var item in playerItemsRemoved){
-                    // might need to check if we actually can add the item here
-                    if (instance.m_inventory.CanAddItem(item.m_dropPrefab)){
-                        instance.m_inventory.AddItem(item);
-                    }
-                }
-                tombstoneCreated = true;
-                instance.CreateTombStone();
+                itemsToDrop.AddRange(playerItemsRemoved);
                 inventory.Changed();
             }
 
-            if (savedItems.Count > 0) {
-                Jotunn.Logger.LogDebug($"Returning {savedItems.Count} items on death");
-                foreach (var item in savedItems) {
-                    // might need to check if we actually can add the item here
-                    instance.m_inventory.AddItem(item);
+            if (ValConfig.ItemsSavedToTombstone.Value && savedItems.Count > 0) {
+                Jotunn.Logger.LogDebug($"Saving {savedItems.Count} Items to tombstone");
+                itemsToDrop.AddRange(savedItems);
+            }
+
+            if (itemsToDrop.Count > 0) {
+                Jotunn.Logger.LogDebug("Saving droppable items to tombstone");
+
+                tombstoneCreated = true;
+                tombstoneGo = UnityEngine.Object.Instantiate<GameObject>(instance.m_tombstone, instance.GetCenterPoint(), instance.transform.rotation);
+                AddItemsToTombstone(tombstoneGo.GetComponent<Container>().GetInventory(), itemsToDrop);
+                foreach (var item in itemsToDrop) {
+                    instance.m_inventory.RemoveItem(item);
                 }
-                if (ValConfig.ItemsSavedToTombstone.Value) {
-                    tombstoneCreated = true;
-                    instance.CreateTombStone();
-                }
+                // gameObject.GetComponent<Container>().GetInventory().MoveInventoryToGrave(instance.m_inventory);
+                tombstone = tombstoneGo.GetComponent<TombStone>();
+                PlayerProfile playerProfile = Game.instance.GetPlayerProfile();
+                string name = playerProfile.GetName();
+                long playerId = playerProfile.GetPlayerID();
+                tombstone.Setup(name, playerId);
                 inventory.Changed();
             }
 
             // Whether or not to spawn the death marker on the map
-            if (ValConfig.ShowDeathMapMarker.Value && tombstoneCreated)
-            {
+            if (ValConfig.ShowDeathMapMarker.Value && tombstoneCreated) {
                 Minimap.instance.AddPin(instance.transform.position, Minimap.PinType.Death, $"$hud_mapday {EnvMan.instance.GetDay(ZNet.instance.GetTimeSeconds())}", save: true, isChecked: false, 0L);
             }
         }
 
-
+        public static void AddItemsToTombstone(Inventory tombstone, List<ItemDrop.ItemData> transferItems)
+        {
+            int size = transferItems.Count() / 2;
+            tombstone.m_width = size + 1;
+            tombstone.m_height = size + 1;
+            foreach (ItemDrop.ItemData item in transferItems) {
+                if (!item.m_shared.m_questItem && !item.m_equipped) {
+                    tombstone.m_inventory.Add(item);
+                }
+            }
+            tombstone.Changed();
+        }
 
         public static void OnDeathStat(Player instance)
         {
@@ -360,14 +350,12 @@ public static class OnDeathChanges
                 if (equipment_saved >= max_equipment_savable) {
                     Jotunn.Logger.LogDebug($"Max equipment retained ({max_equipment_savable}) reached, removing {equipment.m_dropPrefab.name}");
                     itemsRemoved.Add(equipment);
-                    instance.m_inventory.RemoveItem(equipment);
                     return false;
                 }
             } else {
                 if (equipment_saved >= ValConfig.MaximumEquipmentRetainedOnDeath.Value) {
                     Jotunn.Logger.LogDebug($"Max equipment retained ({ValConfig.MaximumEquipmentRetainedOnDeath.Value}) reached, removing {equipment.m_dropPrefab.name}");
                     itemsRemoved.Add(equipment);
-                    instance.m_inventory.RemoveItem(equipment);
                     return false;
                 }
             }

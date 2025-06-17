@@ -1,3 +1,10 @@
+  **0.5.4**
+---
+```
+- Prevent shuffling of items on death
+- Fix some items appearing as duplicated ghosts
+```
+
   **0.5.3**
 ---
 ```
