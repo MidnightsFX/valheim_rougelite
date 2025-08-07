@@ -1,3 +1,9 @@
+  **0.5.5**
+---
+```
+- Fixes equipped items not being saved to tombstone when they are removed
+```
+
   **0.5.4**
 ---
 ```

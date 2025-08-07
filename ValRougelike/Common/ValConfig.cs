@@ -1,5 +1,10 @@
-﻿using System;
+﻿using BepInEx;
 using BepInEx.Configuration;
+using Jotunn.Entities;
+using Jotunn.Managers;
+using System;
+using System.Collections;
+using System.IO;
 
 namespace Deathlink.Common;
 
@@ -35,6 +40,15 @@ public class ValConfig
     public static ConfigEntry<string> MaximumEquipmentRetainedStyle;
     //public static ConfigEntry<bool> EffectRemovalOnDeath;
 
+    const string cfgFolder = "Deathlink";
+    const string deathChoicesCfg = "DeathChoices.yaml";
+    const string deathSettingsCfg = "CharacterSettings.yaml";
+    internal static String deathChoicesPath = Path.Combine(Paths.ConfigPath, cfgFolder, deathChoicesCfg);
+    internal static String characterChoicePath = Path.Combine(Paths.ConfigPath, cfgFolder, deathSettingsCfg);
+
+    private static CustomRPC deathChoiceRPC;
+    private static CustomRPC characterSettingRPC;
+
     public static ConfigEntry<float> SkillProgressUpdateCheckInterval;
     
     public ValConfig(ConfigFile Config)
@@ -43,7 +57,23 @@ public class ValConfig
         cfg = Config;
         cfg.SaveOnConfigSet = true;
         CreateConfigValues(Config);
-        
+        SetupConfigRPCs();
+    }
+
+    public static string GetSecondaryConfigDirectoryPath() {
+        var patchesFolderPath = Path.Combine(Paths.ConfigPath, cfgFolder);
+        var dirInfo = Directory.CreateDirectory(patchesFolderPath);
+
+        return dirInfo.FullName;
+    }
+
+    public void SetupConfigRPCs()
+    {
+        deathChoiceRPC = NetworkManager.Instance.AddRPC("LSE_LevelsRPC", OnServerRecieveConfigs, OnClientReceiveDeathChoiceConfigs);
+        characterSettingRPC = NetworkManager.Instance.AddRPC("LSE_ColorsRPC", OnServerRecieveConfigs, OnClientReceiveColorConfigs);
+
+        SynchronizationManager.Instance.AddInitialSynchronization(LevelSettingsRPC, SendLevelsConfigs);
+        SynchronizationManager.Instance.AddInitialSynchronization(ColorSettingsRPC, SendColorsConfigs);
     }
 
     // Create Configuration and load it.
@@ -95,6 +125,121 @@ public class ValConfig
             new ConfigDescription("Enables Debug logging.",
             null,
             new ConfigurationManagerAttributes { IsAdvanced = true }));
+        EnableDebugMode.SettingChanged += Logger.enableDebugLogging;
+        Logger.CheckEnableDebugLogging();
+    }
+
+    internal void LoadYamlConfigs()
+    {
+        string externalConfigFolder = ValConfig.GetSecondaryConfigDirectoryPath();
+        string[] presentFiles = Directory.GetFiles(externalConfigFolder);
+        bool foundDeathChoices = false;
+        bool foundCharacterSettings = false;
+
+        foreach (string configFile in presentFiles)
+        {
+            if (configFile.Contains(deathChoicesCfg))
+            {
+                Logger.LogDebug($"Found Deathchoice configuration: {configFile}");
+                deathChoicesPath = configFile;
+                foundDeathChoices = true;
+            }
+
+            if (configFile.Contains(deathSettingsCfg))
+            {
+                Logger.LogDebug($"Found Character configuration: {configFile}");
+                characterChoicePath = configFile;
+                foundCharacterSettings = true;
+            }
+        }
+
+        if (foundDeathChoices == false)
+        {
+            Logger.LogDebug("Death Choices missing, recreating.");
+            using (StreamWriter writetext = new StreamWriter(deathChoicesPath))
+            {
+                String header = @"#################################################
+# Deathlink - Death Choice Configuration
+#################################################
+";
+                writetext.WriteLine(header);
+                writetext.WriteLine(DeathConfigurationData.DeathLevelsYamlDefaultConfig());
+            }
+        }
+
+        if (foundCharacterSettings == false)
+        {
+            Logger.LogDebug("Character Settings missing, recreating.");
+            using (StreamWriter writetext = new StreamWriter(deathChoicesPath))
+            {
+                String header = @"#################################################
+# Deathlink - Character settings
+#################################################
+";
+                writetext.WriteLine(header);
+                writetext.WriteLine(DeathConfigurationData.PlayerSettingsDefaultConfig());
+            }
+        }
+
+        SetupFileWatcher(deathChoicesCfg);
+        SetupFileWatcher(deathSettingsCfg);
+    }
+
+    private void SetupFileWatcher(string filtername)
+    {
+        FileSystemWatcher fw = new FileSystemWatcher();
+        fw.Path = ValConfig.GetSecondaryConfigDirectoryPath();
+        fw.NotifyFilter = NotifyFilters.LastWrite;
+        fw.Filter = filtername;
+        fw.Changed += new FileSystemEventHandler(UpdateConfigFileOnChange);
+        fw.Created += new FileSystemEventHandler(UpdateConfigFileOnChange);
+        fw.Renamed += new RenamedEventHandler(UpdateConfigFileOnChange);
+        fw.SynchronizingObject = ThreadingHelper.SynchronizingObject;
+        fw.EnableRaisingEvents = true;
+    }
+
+    private static void UpdateConfigFileOnChange(object sender, FileSystemEventArgs e)
+    {
+        if (SynchronizationManager.Instance.PlayerIsAdmin == false)
+        {
+            Logger.LogInfo("Player is not an admin, and not allowed to change local configuration. Ignoring.");
+            return;
+        }
+        if (!File.Exists(e.FullPath)) { return; }
+
+        string filetext = File.ReadAllText(e.FullPath);
+        var fileInfo = new FileInfo(e.FullPath);
+        Logger.LogDebug($"Filewatch changes from: ({fileInfo.Name}) {fileInfo.FullName}");
+        switch (fileInfo.Name)
+        {
+            case deathChoicesCfg:
+                Logger.LogDebug("Triggering Color Settings update.");
+                // Colorization.UpdateYamlConfig(filetext);
+                deathChoiceRPC.SendPackage(ZNet.instance.m_peers, SendFileAsZPackage(e.FullPath));
+                break;
+            case deathSettingsCfg:
+                Logger.LogDebug("Triggering Level Settings update.");
+                // LevelSystemData.UpdateYamlConfig(filetext);
+                characterSettingRPC.SendPackage(ZNet.instance.m_peers, SendFileAsZPackage(e.FullPath));
+                break;
+        }
+    }
+
+    private static IEnumerator OnClientReceiveDeathChoiceConfigs(long sender, ZPackage package)
+    {
+        var levelsyaml = package.ReadString();
+        // TODO update things
+       // bool level_update_valid = LevelSystemData.UpdateYamlConfig(levelsyaml);
+
+        yield return null;
+    }
+
+    private static ZPackage SendFileAsZPackage(string filepath)
+    {
+        string filecontents = File.ReadAllText(filepath);
+        ZPackage package = new ZPackage();
+        package.Write(filecontents);
+        return package;
     }
 
     /// <summary>

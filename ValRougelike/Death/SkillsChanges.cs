@@ -19,7 +19,7 @@ public class DeathSkillContainment
     {
         if (Player.m_localPlayer == null)
         {
-            Jotunn.Logger.LogWarning("Death skill setup failed due to player instance not being available.");
+            Logger.LogWarning("Death skill setup failed due to player instance not being available.");
             return;
         }
         if (PlayerSkillGains != null) { return; }
@@ -71,7 +71,7 @@ public static class SkillsChanges
             if (ValConfig.EnableXPLossFromGainedXP.Value) {
                 foreach (KeyValuePair<Skills.SkillType, float> IncreasedSkill in skillGainMonitor.GetSkillGains()) {
                     if (skills_to_avoid_standard_death_penalty.Contains(IncreasedSkill.Key)) {
-                        Jotunn.Logger.LogDebug($"Skipping reducing skill gained skill from {IncreasedSkill.Key}");
+                        Logger.LogDebug($"Skipping reducing skill gained skill from {IncreasedSkill.Key}");
                         continue;
                     }
                     float lostEXP = IncreasedSkill.Value * ValConfig.GainedSkillLossFactor.Value;
@@ -93,7 +93,7 @@ public static class SkillsChanges
         {
             foreach (KeyValuePair<SkillType, Skill> skillDatum in skills.m_skillData) {
                 if (skills_to_avoid_standard_death_penalty.Contains(skillDatum.Key)) {
-                    Jotunn.Logger.LogDebug($"Skipping lowering skill {skillDatum.Key} current level: {skillDatum.Value.m_level}");
+                    Logger.LogDebug($"Skipping lowering skill {skillDatum.Key} current level: {skillDatum.Value.m_level}");
                     continue;
                 }
                 float num = skillDatum.Value.m_level * factor;
@@ -161,7 +161,7 @@ public static class SkillsChanges
                     }
                 }
                 catch (Exception ex) {
-                    Jotunn.Logger.LogError($"Error parsing {item} as skill enum: {ex}");
+                    Logger.LogError($"Error parsing {item} as skill enum: {ex}");
                 }
             }
         }
@@ -171,8 +171,8 @@ public static class SkillsChanges
             skillList.AddRange(tunallowed);
         }
         if (add_info_about_invalid_enum == true) {
-            Jotunn.Logger.LogWarning($"Some of the skills you provided in the config are not valid skill types. Invalid skill types will be ignored. A comma seperated of valid skill names is required.");
-            Jotunn.Logger.LogWarning($"Valid skill types are: {string.Join(", ", Skills.s_allSkills)}");
+            Logger.LogWarning($"Some of the skills you provided in the config are not valid skill types. Invalid skill types will be ignored. A comma seperated of valid skill names is required.");
+            Logger.LogWarning($"Valid skill types are: {string.Join(", ", Skills.s_allSkills)}");
         }
     }
 }

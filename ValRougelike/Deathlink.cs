@@ -1,15 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
-using BepInEx;
+﻿using BepInEx;
+using BepInEx.Logging;
+using Deathlink.Common;
+using Deathlink.Death;
 using HarmonyLib;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using Jotunn.Utils;
-using UnityEngine;
-using Deathlink.Common;
-using Deathlink.Death;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace Deathlink
 {
@@ -21,7 +22,7 @@ namespace Deathlink
     {
         public const string PluginGUID = "MidnightsFX.Deathlink";
         public const string PluginName = "Deathlink";
-        public const string PluginVersion = "0.5.4";
+        public const string PluginVersion = "0.7.0";
 
         public ValConfig cfg;
         internal static AssetBundle EmbeddedResourceBundle;
@@ -31,9 +32,11 @@ namespace Deathlink
         // Use this class to add your own localization to the game
         // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
         public static CustomLocalization Localization = LocalizationManager.Instance.GetLocalization();
+        public static ManualLogSource Log;
 
         public void Awake()
         {
+            Log = this.Logger;
             cfg = new ValConfig(Config);
             // Jotunn comes with its own Logger class to provide a consistent Log style for all mods using it
             AddLocalizations();
@@ -47,7 +50,7 @@ namespace Deathlink
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
             
-            Jotunn.Logger.LogInfo("Death is not the end.");
+            Logger.LogInfo("Death is not the end.");
             
             // To learn more about Jotunn's features, go to
             // https://valheim-modding.github.io/Jotunn/tutorials/overview.html
