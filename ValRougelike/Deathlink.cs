@@ -11,6 +11,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using static Deathlink.Common.DataObjects;
 
 namespace Deathlink
 {
@@ -54,6 +55,10 @@ namespace Deathlink
             
             // To learn more about Jotunn's features, go to
             // https://valheim-modding.github.io/Jotunn/tutorials/overview.html
+        }
+
+        public static DeathChoiceLevel pcfg(){
+            return DeathConfigurationData.playerDeathConfiguration;
         }
 
         // This loads all localizations within the localization directory.

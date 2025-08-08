@@ -12,15 +12,9 @@ public class ValConfig
 {
     public static ConfigFile cfg;
     public static ConfigEntry<bool> EnableDebugMode;
-    public static ConfigEntry<string> ItemsNotSkillCheckedAction;
     public static ConfigEntry<string> ItemsNotSkillChecked;
-    public static ConfigEntry<string> ItemsFailingSkillCheckAction;
-    public static ConfigEntry<float> DeathSkillPerLevelBonus;
-    public static ConfigEntry<int> MinimumEquipmentRetainedOnDeath;
-    public static ConfigEntry<int> MaximumEquipmentRetainedOnDeath;
     public static ConfigEntry<float> MaxPercentResourcesRetainedOnDeath;
     public static ConfigEntry<float> MaxPercentTotalItemsRetainedOnDeath;
-    public static ConfigEntry<float> MaximumPercentEquipmentRetainedOnDeath;
     public static ConfigEntry<float> GainedSkillLossFactor;
     public static ConfigEntry<bool> EnableXPLossFromGainedXP;
     public static ConfigEntry<string> SkillsWithoutDeathPenalty;
@@ -35,7 +29,6 @@ public class ValConfig
     public static ConfigEntry<bool> FoodLossOnDeath;
     public static ConfigEntry<bool> FoodLossOnDeathBySkillLevel;
     public static ConfigEntry<bool> ShowDeathMapMarker;
-    public static ConfigEntry<bool> ItemsSavedToTombstone;
     public static ConfigEntry<string> DeathSkillPercentageStyle;
     public static ConfigEntry<string> MaximumEquipmentRetainedStyle;
     //public static ConfigEntry<bool> EffectRemovalOnDeath;
@@ -69,35 +62,24 @@ public class ValConfig
 
     public void SetupConfigRPCs()
     {
-        deathChoiceRPC = NetworkManager.Instance.AddRPC("LSE_LevelsRPC", OnServerRecieveConfigs, OnClientReceiveDeathChoiceConfigs);
-        characterSettingRPC = NetworkManager.Instance.AddRPC("LSE_ColorsRPC", OnServerRecieveConfigs, OnClientReceiveColorConfigs);
+        deathChoiceRPC = NetworkManager.Instance.AddRPC("DEATHLK_CH", OnServerRecieveConfigs, OnClientReceiveDeathChoiceConfigs);
+        characterSettingRPC = NetworkManager.Instance.AddRPC("DEATHLK_PSET", OnServerRecievePlayerSettingsConfig, OnClientReceivePlayerSettingsConfigs);
 
-        SynchronizationManager.Instance.AddInitialSynchronization(LevelSettingsRPC, SendLevelsConfigs);
-        SynchronizationManager.Instance.AddInitialSynchronization(ColorSettingsRPC, SendColorsConfigs);
+        SynchronizationManager.Instance.AddInitialSynchronization(deathChoiceRPC, SendDeathChoices);
+        SynchronizationManager.Instance.AddInitialSynchronization(characterSettingRPC, SendCharSettings);
     }
 
     // Create Configuration and load it.
     private void CreateConfigValues(ConfigFile Config)
     {
-        DeathSkillPerLevelBonus = BindServerConfig("DeathProgression","DeathSkillPerLevelBonus",1f,"How impactful death skill progression is. This impacts how much each level improves your skill and item retention.", false, 0f, 10f);
-        MinimumEquipmentRetainedOnDeath = BindServerConfig("DeathProgression","MinimumEquipmentRetainedOnDeath",2,"The minimum amount of Equipment that can be retained on death, depends on players individual skill.", true, 0, 30);
-        MaximumEquipmentRetainedOnDeath = BindServerConfig("DeathProgression", "MaximumEquipmentRetainedOnDeath", 10, "The maximum amount of Equipment that can be retained on death, depends on players individual skill.", true, 0, 30);
-        MaximumPercentEquipmentRetainedOnDeath = BindServerConfig("DeathProgression", "MaximumPercentEquipmentRetainedOnDeath", 20f, "The maximum amount of Equipment that can be retained on death, the maximum percentage of your inventory that can be equipment and still be saved.", true, 0f, 100f);
         MaxPercentResourcesRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentResourcesRetainedOnDeath",20f,"The maximum amount of Resources that can be retained on death, depends on players individual skill.", true, 0f, 100f);
         MaxPercentTotalItemsRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentTotalItemsRetainedOnDeath",90f,"The maximum amount of total items that can be retained on death, depends on players individual skill.", true, 0f, 100f);
-        ItemsSavedToTombstone = BindServerConfig("DeathProgression", "ItemsSavedToTombstone", false, "Items are saved to your tombstone instead of saved to your character.");
         DeathSkillPercentageStyle = BindServerConfig("DeathProgression", "DeathSkillPercentageStyle", "InventorySize",
             "The maximum number that all of the skill based percentage rolls will use. Either the max number of items carryable or the number of items you currently have.",
             new AcceptableValueList<string>("InventorySize", "CurrentItems"));
         MaximumEquipmentRetainedStyle = BindServerConfig("DeathProgression", "MaximumEquipmentRetainedStyle", "AbsoluteValue", "Whether the maximum amount of equipment saved is an absolute value, or a percentage", new AcceptableValueList<string>("Percentage", "AbsoluteValue"));
-        ItemsFailingSkillCheckAction = BindServerConfig("DeathProgression", "ItemsFailingSkillCheckAction", "DropOnDeath",
-            "What happens to items that fail the skill check. DropOnDeath = placed into a tombstone on death (like vanilla), Destroy = Items are destroyed.",
-            new AcceptableValueList<string>("DropOnDeath", "Destroy"));
 
         ItemsNotSkillChecked = BindServerConfig("DeathProgression", "ItemsNotSkillChecked", "Tin,TinOre,Copper,CopperOre,CopperScrap,Bronze,Iron,IronScrap,Silver,SilverOre,DragonEgg,chest_hildir1,chest_hildir2,chest_hildir3,BlackMetal,BlackMetalScrap,DvergrNeedle,MechanicalSpring,FlametalNew,FlametalOreNew", "List of items that are not rolled to be saved through death progression.");
-        ItemsNotSkillCheckedAction = BindServerConfig("DeathProgression", "ItemsNotSkillCheckedAction", "dropOnDeath", 
-            "What happens to non-teleportable items. DropOnDeath = placed into a tombstone on death, AlwaysDestroy = never saved, AlwaysSave = These items are never destroyed and do not count towards save limits.", 
-            new AcceptableValueList<string>("DropOnDeath", "AlwaysDestroy", "AlwaysSave"));
 
         EnableXPLossFromGainedXP = BindServerConfig("SkillLossModifiers", "EnableXPLossFromGainedXP", true, "When enabled, you loose XP gained since the last death. Repeated deaths regardless of time without skill gains will not result in XP loss, unless EnableSkillsXPLossOnDeath is true.");
         GainedSkillLossFactor = BindServerConfig("SkillLossModifiers", "GainedSkillLossFactor", 0.2f, "The percentage of skills gains since last death that are lost when dying.", false, 0f, 1f);
@@ -213,24 +195,44 @@ public class ValConfig
         switch (fileInfo.Name)
         {
             case deathChoicesCfg:
-                Logger.LogDebug("Triggering Color Settings update.");
-                // Colorization.UpdateYamlConfig(filetext);
+                Logger.LogDebug("Triggering Death Choices Settings update.");
+                DeathConfigurationData.UpdateDeathLevelsConfig(filetext);
                 deathChoiceRPC.SendPackage(ZNet.instance.m_peers, SendFileAsZPackage(e.FullPath));
                 break;
-            case deathSettingsCfg:
-                Logger.LogDebug("Triggering Level Settings update.");
-                // LevelSystemData.UpdateYamlConfig(filetext);
-                characterSettingRPC.SendPackage(ZNet.instance.m_peers, SendFileAsZPackage(e.FullPath));
-                break;
+            //case deathSettingsCfg:
+            //    Logger.LogDebug("Triggering Level Settings update.");
+            //    // LevelSystemData.UpdateYamlConfig(filetext);
+            //    characterSettingRPC.SendPackage(ZNet.instance.m_peers, SendFileAsZPackage(e.FullPath));
+            //    break;
         }
     }
 
-    private static IEnumerator OnClientReceiveDeathChoiceConfigs(long sender, ZPackage package)
-    {
-        var levelsyaml = package.ReadString();
-        // TODO update things
-       // bool level_update_valid = LevelSystemData.UpdateYamlConfig(levelsyaml);
+    private static IEnumerator OnClientReceiveDeathChoiceConfigs(long sender, ZPackage package) {
+        var yaml = package.ReadString();
+        DeathConfigurationData.UpdateDeathLevelsConfig(yaml);
+        DeathConfigurationData.WriteDeathChoices();
+        yield return null;
+    }
 
+    private static IEnumerator OnServerRecieveConfigs(long sender, ZPackage package)
+    {
+        yield return null;
+    }
+
+    private static IEnumerator OnServerRecievePlayerSettingsConfig(long sender, ZPackage package)
+    {
+        var yaml = package.ReadString();
+        DeathConfigurationData.UpdatePlayerConfigSettings(yaml);
+        DeathConfigurationData.WritePlayerChoices();
+        yield return null;
+    }
+
+    private static IEnumerator OnClientReceivePlayerSettingsConfigs(long sender, ZPackage package)
+    {
+        // only updates in memory
+        var yaml = package.ReadString();
+        DeathConfigurationData.UpdatePlayerConfigSettings(yaml);
+        DeathConfigurationData.CheckAndSetPlayerDeathConfig();
         yield return null;
     }
 
@@ -240,6 +242,15 @@ public class ValConfig
         ZPackage package = new ZPackage();
         package.Write(filecontents);
         return package;
+    }
+
+    private static ZPackage SendCharSettings()
+    {
+        return SendFileAsZPackage(characterChoicePath);
+    }
+    private static ZPackage SendDeathChoices()
+    {
+        return SendFileAsZPackage(deathChoicesPath);
     }
 
     /// <summary>

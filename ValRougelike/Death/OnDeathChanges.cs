@@ -126,15 +126,15 @@ public static class OnDeathChanges
                 numberOfItemsSavable = (int)(playerItems.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
             }
 
-            if (numberOfItemsSavable < ValConfig.MinimumEquipmentRetainedOnDeath.Value) {
-                numberOfItemsSavable += ValConfig.MinimumEquipmentRetainedOnDeath.Value;
+            if (numberOfItemsSavable < DeathConfigurationData.playerDeathConfiguration.DeathStyle.minItemsKept) {
+                numberOfItemsSavable = DeathConfigurationData.playerDeathConfiguration.DeathStyle.minItemsKept;
             }
 
             // equipment specific
             List<ItemDrop.ItemData> playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetEquipment());
-            int max_equipment_savable = (int)(playerEquipment.Count * (ValConfig.MaximumPercentEquipmentRetainedOnDeath.Value / 100));
+            int max_equipment_savable = (int)(playerEquipment.Count * (DeathConfigurationData.playerDeathConfiguration.DeathStyle.maxItemsKept / 100));
             int max_eq_savable_by_type = max_equipment_savable;
-            if (ValConfig.MaximumEquipmentRetainedStyle.Value == "AbsoluteValue") { max_eq_savable_by_type = ValConfig.MaximumEquipmentRetainedOnDeath.Value; }
+            if (ValConfig.MaximumEquipmentRetainedStyle.Value == "AbsoluteValue") { max_eq_savable_by_type = DeathConfigurationData.playerDeathConfiguration.DeathStyle.maxItemsKept; }
             Logger.LogDebug($"Player number of items {playerItems.Count}, savable due to skill {numberOfItemsSavable} (max equipment saves {max_eq_savable_by_type})");
             if (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value < ((float)numberOfItemsSavable / playerItems.Count))
             {
@@ -204,23 +204,23 @@ public static class OnDeathChanges
 
             // Handle items that are defined in the non-skill-checked section
             // we do this right after clearing the inventory to allow creating a tombstone from the empty inventory (which can just contain our non-skill handled items)
-            switch (ValConfig.ItemsNotSkillCheckedAction.Value) {
-                case "DropOnDeath":
+            switch (Deathlink.pcfg().DeathStyle.nonSkillCheckedItemAction) {
+                case DataObjects.NonSkillCheckedItemAction.Tombstone:
                     Logger.LogDebug($"Dropping non-skill-checked items on death ({playerNonSkillCheckItems.Count()})");
                     itemsToDrop.AddRange(playerNonSkillCheckItems);
                     break;
-                case "AlwaysDestroy":
+                case DataObjects.NonSkillCheckedItemAction.Destroy:
                     Logger.LogDebug($"Destroying non-skill-checked items on death ({playerNonSkillCheckItems.Count()})");
                     playerItemsRemoved.AddRange(playerNonSkillCheckItems);
                     break;
-                case "AlwaysSave":
+                case DataObjects.NonSkillCheckedItemAction.Save:
                     Logger.LogDebug($"Saving non-skill-checked items on death ({playerNonSkillCheckItems.Count()})");
                     savedItems.AddRange(playerNonSkillCheckItems);
                     break;
             }
 
             bool tombstoneCreated = false;
-            if (ValConfig.ItemsFailingSkillCheckAction.Value == "DropOnDeath" && playerItemsRemoved.Count > 0) {
+            if (Deathlink.pcfg().DeathStyle.itemLossStyle == DataObjects.ItemLossStyle.None && playerItemsRemoved.Count > 0) {
                 Logger.LogDebug($"Items failed skillcheck {playerItemsRemoved.Count} items on death, dropping to tombestone.");
                 itemsToDrop.AddRange(playerItemsRemoved);
             }
@@ -230,7 +230,7 @@ public static class OnDeathChanges
                 instance.m_inventory.RemoveItem(item);
             }
 
-            if (ValConfig.ItemsSavedToTombstone.Value && savedItems.Count > 0) {
+            if (Deathlink.pcfg().DeathStyle.itemSavedStyle == DataObjects.ItemSavedStyle.Tombstone && savedItems.Count > 0) {
                 Logger.LogDebug($"Saving {savedItems.Count} Items to tombstone");
                 itemsToDrop.AddRange(savedItems);
             }
@@ -350,8 +350,8 @@ public static class OnDeathChanges
                     return false;
                 }
             } else {
-                if (equipment_saved >= ValConfig.MaximumEquipmentRetainedOnDeath.Value) {
-                    Logger.LogDebug($"Max equipment retained ({ValConfig.MaximumEquipmentRetainedOnDeath.Value}) reached, removing {equipment.m_dropPrefab.name}");
+                if (equipment_saved >= DeathConfigurationData.playerDeathConfiguration.DeathStyle.minEquipmentKept) {
+                    Logger.LogDebug($"Max equipment retained ({DeathConfigurationData.playerDeathConfiguration.DeathStyle.minEquipmentKept}) reached, removing {equipment.m_dropPrefab.name}");
                     return false;
                 }
             }

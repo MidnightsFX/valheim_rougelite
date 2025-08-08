@@ -34,10 +34,9 @@ public static class DeathProgressionSkill
     public static float DeathSkillCalculatePercentWithBonus(float bonus = 0.0f, float min = 0.01f, float max = 1.0f)
     {
         float percentage = 0f;
-        if (Player.m_localPlayer != null)
-        {
+        if (Player.m_localPlayer != null) {
             float player_skill_level = Player.m_localPlayer.GetSkillFactor(DeathSkill);
-            percentage += player_skill_level * ValConfig.DeathSkillPerLevelBonus.Value;
+            percentage += player_skill_level;
         }
         
         percentage += bonus;

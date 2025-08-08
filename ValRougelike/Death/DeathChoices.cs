@@ -18,6 +18,7 @@ namespace Deathlink.Death
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Show))]
         public static class ShowDeathChoiceUI {
             public static void Postfix(InventoryGui __instance) {
+                if (Player.m_localPlayer != null && DeathConfigurationData.playerSettings.ContainsKey(Player.m_localPlayer.GetPlayerID())) { return; }
                 if (__instance.gameObject.GetComponent<DeathChoiceUI>() == null) { __instance.gameObject.AddComponent<DeathChoiceUI>(); }
                 DeathChoiceUI.Instance.Show();
             }
@@ -52,10 +53,9 @@ namespace Deathlink.Death
             private static Text LootModifersDescription;
             private static Text HarvestModifiersDescription;
 
-            private static Dictionary<string, DeathChoiceLevel> DeathChoices = DeathConfigurationData.deathLevels;
-
             private static List<Toggle> difficultyToggles = new List<Toggle>();
             private static ToggleGroup choiceGroup;
+            private static string selectedDeathChoice = "none";
 
             public void Awake()
             {
@@ -78,7 +78,18 @@ namespace Deathlink.Death
             }
 
             public void MakePlayerDeathSelection() {
+                if (Player.m_localPlayer == null) {
+                    Logger.LogWarning("Player not set, ensure the local player is set.");
+                    return;
+                }
+                if (selectedDeathChoice == "none") {
+                    Logger.LogWarning("No death type selected");
+                    return;
+                }
 
+                DeathConfigurationData.playerSettings.Add(Player.m_localPlayer.GetPlayerID(), new DeathConfiguration(){ DeathChoiceLevel = selectedDeathChoice });
+                DeathConfigurationData.CheckAndSetPlayerDeathConfig();
+                Hide();
             }
 
             // TODO make this configurable and loaded from a config file
@@ -87,7 +98,7 @@ namespace Deathlink.Death
                 difficultyToggles.Clear();
                 int y_value = -50;
                 //Logger.LogDebug($"Setting up {DeathChoices.Count} death styles.");
-                foreach (var entry in DeathChoices) {
+                foreach (var entry in DeathConfigurationData.DeathLevels) {
                     var newDeathChoice = GameObject.Instantiate(ChoicesContainer, ChoicesContent.transform);
                     //Logger.LogDebug("Created container");
                     var selector = newDeathChoice.transform.Find("selecter");
@@ -108,6 +119,7 @@ namespace Deathlink.Death
                         //Logger.LogDebug("Set loot mod");
                         HarvestModifiersDescription.GetComponent<Text>().text = entry.Value.GetResourceModiferDescription();
                         //Logger.LogDebug("Set harvest mod");
+                        selectedDeathChoice = entry.Key;
                     });
                     //Logger.LogDebug("Created onclick");
                     newDeathChoice.SetActive(true);

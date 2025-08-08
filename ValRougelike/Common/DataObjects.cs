@@ -34,14 +34,24 @@ public class DataObjects
         Harvesting
     }
 
+    public enum NonSkillCheckedItemAction
+    {
+        Destroy,
+        Tombstone,
+        Save
+    }
+
     public class DeathProgressionDetails
     {
         public int minItemsKept;
         public int maxItemsKept;
+        public int minEquipmentKept;
+        public int maxEquipmentKept;
         public float maxSkillLossPercentage;
         public float minSkillLossPercentage;
         public ItemLossStyle itemLossStyle;
         public ItemSavedStyle itemSavedStyle;
+        public NonSkillCheckedItemAction nonSkillCheckedItemAction;
     }
 
     public class DeathResourceModifier
@@ -71,6 +81,7 @@ public class DataObjects
     {
         public string DisplayName { get; set; }
         public DeathProgressionDetails DeathStyle { get; set; }
+        public float DeathSkillRate { get; set; } = 1f;
         public Dictionary<string, DeathResourceModifier> ResourceModifiers { get; set; }
         public Dictionary<string, DeathSkillModifier> SkillModifiers { get; set; }
         public Dictionary<string, DeathLootModifier> DeathLootModifiers { get; set; }

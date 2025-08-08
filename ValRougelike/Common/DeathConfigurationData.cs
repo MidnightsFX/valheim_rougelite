@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using static Deathlink.Common.DataObjects;
 
 namespace Deathlink.Common
 {
     internal static class DeathConfigurationData
     {
-        public static Dictionary<string, DeathChoiceLevel> deathLevels = new Dictionary<string, DeathChoiceLevel>()
+        public static readonly Dictionary<string, DeathChoiceLevel> defaultDeathLevels = new Dictionary<string, DeathChoiceLevel>()
         {
             {
                 "Vanilla", new DeathChoiceLevel() {
@@ -81,6 +83,24 @@ namespace Deathlink.Common
 
         public static Dictionary<long, DeathConfiguration> playerSettings = new Dictionary<long, DeathConfiguration>() { };
 
+        public static Dictionary<string, DeathChoiceLevel> DeathLevels = defaultDeathLevels;
+
+        public static DeathChoiceLevel playerDeathConfiguration;
+
+        public static void CheckAndSetPlayerDeathConfig() {
+            if (Player.m_localPlayer == null) { return; }
+            long playerID = Player.m_localPlayer.GetPlayerID();
+            if (playerSettings.ContainsKey(playerID)) {
+                string selectedDeathConfig = playerSettings[playerID].DeathChoiceLevel;
+                if (DeathLevels.ContainsKey(selectedDeathConfig)) {
+                    playerDeathConfiguration = DeathLevels[selectedDeathConfig];
+                } else {
+                    Logger.LogWarning("Player preference setting is not an available config, using fallback");
+                    playerDeathConfiguration = DeathLevels.First().Value;
+                }
+            }
+        }
+
         public static string PlayerSettingsDefaultConfig()
         {
             return DataObjects.yamlserializer.Serialize(playerSettings);
@@ -88,7 +108,29 @@ namespace Deathlink.Common
 
         public static string DeathLevelsYamlDefaultConfig()
         {
-            return DataObjects.yamlserializer.Serialize(deathLevels);
+            return DataObjects.yamlserializer.Serialize(DeathLevels);
+        }
+
+        public static void WriteDeathChoices()
+        {
+            File.WriteAllText(ValConfig.deathChoicesPath, yamlserializer.Serialize(DeathLevels));
+        }
+
+        public static void WritePlayerChoices()
+        {
+            File.WriteAllText(ValConfig.characterChoicePath, yamlserializer.Serialize(playerSettings));
+        }
+
+        public static void UpdateDeathLevelsConfig(string rawyaml) {
+            DeathLevels = yamldeserializer.Deserialize<Dictionary<string, DeathChoiceLevel>>(rawyaml);
+        }
+
+        public static void UpdatePlayerConfigSettings(string rawyaml) {
+            var added_cfgs = yamldeserializer.Deserialize<Dictionary<long, DeathConfiguration>>(rawyaml);
+
+            foreach (var kvp in added_cfgs) {
+                playerSettings.Add(kvp.Key, kvp.Value);
+            }
         }
     }
 }
