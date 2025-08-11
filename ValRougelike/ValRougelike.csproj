@@ -77,6 +77,8 @@
     <Compile Include="Common\ValConfig.cs" />
     <Compile Include="Death\DeathChoices.cs" />
     <Compile Include="Death\DeathProgressionSkill.cs" />
+    <Compile Include="Death\HarvestModifiers.cs" />
+    <Compile Include="Death\LootModifiers.cs" />
     <Compile Include="Death\SkillsChanges.cs" />
     <Compile Include="Death\OnDeathChanges.cs" />
     <Compile Include="Extensions.cs" />

@@ -54,7 +54,6 @@ public static class DeathProgressionSkill
             timeSinceGameStart += Time.deltaTime;
             if (lastSkillIncreaseTickTime == 0f)
             {
-                Deathlink.Player_death_skill_monitor.Setup();
                 lastSkillIncreaseTickTime = timeSinceGameStart + ValConfig.SkillProgressUpdateCheckInterval.Value;
                 PlayerProfile profile = Game.instance.GetPlayerProfile();
                 _bossKills = profile.m_playerStats.m_stats[PlayerStatType.BossKills];

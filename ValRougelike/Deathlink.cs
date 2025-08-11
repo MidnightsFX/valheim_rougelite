@@ -27,7 +27,6 @@ namespace Deathlink
 
         public ValConfig cfg;
         internal static AssetBundle EmbeddedResourceBundle;
-        internal static DeathSkillContainment Player_death_skill_monitor;
         internal static bool AzuEPILoaded = false;
 
         // Use this class to add your own localization to the game
@@ -43,16 +42,14 @@ namespace Deathlink
             AddLocalizations();
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("Deathlink.AssetsEmbedded.deathless", typeof(Deathlink).Assembly);
             DeathProgressionSkill.SetupDeathSkill();
-            Player_death_skill_monitor = new DeathSkillContainment();
 
             if (AzuExtendedPlayerInventory.API.IsLoaded()) {
                 AzuEPILoaded = true;
             }
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
-            
+            DeathConfigurationData.Init();
             Logger.LogInfo("Death is not the end.");
-            
             // To learn more about Jotunn's features, go to
             // https://valheim-modding.github.io/Jotunn/tutorials/overview.html
         }

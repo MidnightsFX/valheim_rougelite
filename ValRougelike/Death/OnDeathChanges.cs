@@ -3,69 +3,43 @@ using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 using Deathlink.Common;
+using System.Reflection.Emit;
 
 namespace Deathlink.Death;
 
 public static class OnDeathChanges
 {
-    [HarmonyPatch(typeof(Player), nameof(Player.OnDeath))]
-    [HarmonyPriority(Priority.LowerThanNormal)]
-    static class OnDeath_Tombstone_Patch
+    [HarmonyPatch(typeof(Player))]
+    public static class OnDeath_Tombstone_Patch
     {
-        private static bool Prefix(Player __instance)
+        [HarmonyTranspiler]
+        [HarmonyPatch(nameof(Player.OnDeath))]
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions /*, ILGenerator generator*/)
         {
-            if (!__instance.m_nview.IsOwner())
-            {
-                Debug.Log("OnDeath call but not the owner");
-                return false;
-            }
+            var codeMatcher = new CodeMatcher(instructions);
+            codeMatcher.MatchStartForward(
+                new CodeMatch(OpCodes.Ldarg_0),
+                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Player), nameof(Player.CreateTombStone)))
+                ).Advance(1).RemoveInstructions(4).InsertAndAdvance(
+                Transpilers.EmitDelegate(ModifyDeath)
+                ).ThrowIfNotMatch("Unable to patch Deathlink player death changes.");
 
-            bool flag = __instance.HardDeath();
-            __instance.m_nview.GetZDO().Set(ZDOVars.s_dead, value: true);
-            __instance.m_nview.InvokeRPC(ZNetView.Everybody, "OnDeath");
-            Game.instance.IncrementPlayerStat(PlayerStatType.Deaths);
-            OnDeathStat(__instance);
-
-            Game.instance.GetPlayerProfile().SetDeathPoint(__instance.transform.position);
-            __instance.CreateDeathEffects();
+            return codeMatcher.Instructions();
+        }
+        private static void ModifyDeath(Player __instance)
+        {
             // Tombstone item dropped modifications
             TombstoneOnDeath(__instance);
 
             // Set food loss status based on configs & skills
             FoodLossOnDeath(__instance);
-
-            // Vanilla death reset skills
-            if (ZoneSystem.instance.GetGlobalKey(GlobalKeys.DeathSkillsReset)) {
-                __instance.m_skills.Clear();
-            } else if (flag) {
-                __instance.m_skills.OnDeath();
-            }
-            __instance.m_seman.RemoveAllStatusEffects();
-            Game.instance.RequestRespawn(10f, afterDeath: true);
-            __instance.m_timeSinceDeath = 0f;
-            // Maybe remove the gods merciful mention
-            if (!flag) {
-                __instance.Message(MessageHud.MessageType.TopLeft, "$msg_softdeath");
-            }
-            __instance.Message(MessageHud.MessageType.Center, "$msg_youdied");
-            __instance.ShowTutorial("death");
-            
-            if (__instance.m_onDeath != null){
-                __instance.m_onDeath();
-            }
-
-            string eventLabel = "biome:" + __instance.GetCurrentBiome();
-            Gogan.LogEvent("Game", "Death", eventLabel, 0L);
-
-            // Skip the normal ondeath call
-            return false;
         }
 
         public static void FoodLossOnDeath(Player instance)
         {
-            if (ValConfig.FoodLossOnDeath.Value)
+            if (Deathlink.pcfg().DeathStyle.foodLossOnDeath)
             {
-                if (ValConfig.FoodLossOnDeathBySkillLevel.Value && instance.m_foods.Count > 0)
+                if (Deathlink.pcfg().DeathStyle.foodLossUsesDeathlink && instance.m_foods.Count > 0)
                 {
                     float skill_level = DeathProgressionSkill.DeathSkillCalculatePercentWithBonus();
                     if (skill_level >= 0.9f)
@@ -86,8 +60,7 @@ public static class OnDeathChanges
                         instance.m_foods.Clear();
                     }
                 }
-                else
-                {
+                else {
                     instance.m_foods.Clear();
                 }
             }
@@ -117,30 +90,16 @@ public static class OnDeathChanges
                     playerItemsWithoutNonSkillCheckedItems.Add(item);
                 }
             }
-            int numberOfItemsSavable = 0;
-            if (ValConfig.DeathSkillPercentageStyle.Value == "InventorySize") {
-                int inventory_size = instance.m_inventory.m_width * instance.m_inventory.m_height;
-                Logger.LogDebug($"Inventory size {instance.m_inventory.m_width} * {instance.m_inventory.m_height} = {instance.m_inventory.m_width * instance.m_inventory.m_height}");
-                numberOfItemsSavable = (int)(inventory_size * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
-            } else {
-                numberOfItemsSavable = (int)(playerItems.Count * DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
-            }
 
-            if (numberOfItemsSavable < DeathConfigurationData.playerDeathConfiguration.DeathStyle.minItemsKept) {
-                numberOfItemsSavable = DeathConfigurationData.playerDeathConfiguration.DeathStyle.minItemsKept;
-            }
+            float deathskillbonus = DeathProgressionSkill.DeathSkillCalculatePercentWithBonus();
+            int items_to_keep = Mathf.RoundToInt(((Deathlink.pcfg().DeathStyle.maxItemsKept - Deathlink.pcfg().DeathStyle.minItemsKept) * deathskillbonus) + Deathlink.pcfg().DeathStyle.minItemsKept);
+            int max_equipment_savable = Mathf.RoundToInt(((Deathlink.pcfg().DeathStyle.maxEquipmentKept - Deathlink.pcfg().DeathStyle.minEquipmentKept) * deathskillbonus) + Deathlink.pcfg().DeathStyle.minEquipmentKept);
+            int numberOfItemsSavable = items_to_keep + max_equipment_savable;
+
 
             // equipment specific
             List<ItemDrop.ItemData> playerEquipment = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetEquipment());
-            int max_equipment_savable = (int)(playerEquipment.Count * (DeathConfigurationData.playerDeathConfiguration.DeathStyle.maxItemsKept / 100));
             int max_eq_savable_by_type = max_equipment_savable;
-            if (ValConfig.MaximumEquipmentRetainedStyle.Value == "AbsoluteValue") { max_eq_savable_by_type = DeathConfigurationData.playerDeathConfiguration.DeathStyle.maxItemsKept; }
-            Logger.LogDebug($"Player number of items {playerItems.Count}, savable due to skill {numberOfItemsSavable} (max equipment saves {max_eq_savable_by_type})");
-            if (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value < ((float)numberOfItemsSavable / playerItems.Count))
-            {
-                numberOfItemsSavable = (int)(playerItems.Count * (ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value / 100));
-                Logger.LogDebug($"Number of items savable reduced due to configured max ({ValConfig.MaxPercentTotalItemsRetainedOnDeath.Value}%) now: {numberOfItemsSavable}");
-            }
 
             if (Deathlink.AzuEPILoaded) {
                 foreach (ItemDrop.ItemData item in AzuExtendedPlayerInventory.API.GetQuickSlotsItems()) {
@@ -171,13 +130,12 @@ public static class OnDeathChanges
             List<ItemDrop.ItemData> nonEquippableItems = Deathlink.shuffleList(playerItemsWithoutNonSkillCheckedItems.GetNotEquipment());
             if (numberOfItemsSavable > 0) {
                 // shuffle inventory items that are not equipment
-                int max_number_resources_savable = (int)(ValConfig.MaxPercentResourcesRetainedOnDeath.Value * nonEquippableItems.Count);
                 foreach (var item in nonEquippableItems) {
-                    if (numberOfItemsSavable > 0 && max_number_resources_savable > 0) {
+                    if (numberOfItemsSavable > 0 && items_to_keep > 0) {
                         Logger.LogDebug($"Saving {item.m_dropPrefab.name}");
                         savedItems.Add(item);
                         numberOfItemsSavable -= 1;
-                        max_number_resources_savable -= 1;
+                        items_to_keep -= 1;
                     } else {
                         playerItemsRemoved.Add(item);
                     }
@@ -269,73 +227,6 @@ public static class OnDeathChanges
             tombstone.Changed();
         }
 
-        public static void OnDeathStat(Player instance)
-        {
-            switch (instance.m_lastHit.m_hitType)
-            {
-                case HitData.HitType.Undefined:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByUndefined);
-                    break;
-                case HitData.HitType.EnemyHit:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByEnemyHit);
-                    break;
-                case HitData.HitType.PlayerHit:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByPlayerHit);
-                    break;
-                case HitData.HitType.Fall:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByFall);
-                    break;
-                case HitData.HitType.Drowning:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByDrowning);
-                    break;
-                case HitData.HitType.Burning:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByBurning);
-                    break;
-                case HitData.HitType.Freezing:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByFreezing);
-                    break;
-                case HitData.HitType.Poisoned:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByPoisoned);
-                    break;
-                case HitData.HitType.Water:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByWater);
-                    break;
-                case HitData.HitType.Smoke:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathBySmoke);
-                    break;
-                case HitData.HitType.EdgeOfWorld:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByEdgeOfWorld);
-                    break;
-                case HitData.HitType.Impact:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByImpact);
-                    break;
-                case HitData.HitType.Cart:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByCart);
-                    break;
-                case HitData.HitType.Tree:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByTree);
-                    break;
-                case HitData.HitType.Self:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathBySelf);
-                    break;
-                case HitData.HitType.Structural:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByStructural);
-                    break;
-                case HitData.HitType.Turret:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByTurret);
-                    break;
-                case HitData.HitType.Boat:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByBoat);
-                    break;
-                case HitData.HitType.Stalagtite:
-                    Game.instance.IncrementPlayerStat(PlayerStatType.DeathByStalagtite);
-                    break;
-                default:
-                    ZLog.LogWarning("Not implemented death type " + instance.m_lastHit.m_hitType);
-                    break;
-            }
-        }
-
         internal static bool RemoveEquipmentByStyle(int equipment_saved, int max_equipment_savable, Player instance, ItemDrop.ItemData equipment, List<ItemDrop.ItemData> saved_equipment, int numberOfItemsSavable, out int remainingsaves, out int equipment_saved_count)
         {
             equipment_saved_count = 0;
@@ -343,17 +234,10 @@ public static class OnDeathChanges
             if (numberOfItemsSavable <= 0) {
                 return false;
             }
-            
-            if (ValConfig.MaximumEquipmentRetainedStyle.Value == "Percentage") {
-                if (equipment_saved >= max_equipment_savable) {
-                    Logger.LogDebug($"Max equipment retained ({max_equipment_savable}) reached, removing {equipment.m_dropPrefab.name}");
-                    return false;
-                }
-            } else {
-                if (equipment_saved >= DeathConfigurationData.playerDeathConfiguration.DeathStyle.minEquipmentKept) {
-                    Logger.LogDebug($"Max equipment retained ({DeathConfigurationData.playerDeathConfiguration.DeathStyle.minEquipmentKept}) reached, removing {equipment.m_dropPrefab.name}");
-                    return false;
-                }
+
+            if (equipment_saved >= max_equipment_savable) {
+                Logger.LogDebug($"Max equipment retained ({max_equipment_savable}) reached, removing {equipment.m_dropPrefab.name}");
+                return false;
             }
 
             Logger.LogDebug($"Saving equipment remaining savable?({numberOfItemsSavable}) {equipment.m_dropPrefab.name}");

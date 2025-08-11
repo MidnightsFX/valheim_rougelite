@@ -13,31 +13,19 @@ public class ValConfig
     public static ConfigFile cfg;
     public static ConfigEntry<bool> EnableDebugMode;
     public static ConfigEntry<string> ItemsNotSkillChecked;
-    public static ConfigEntry<float> MaxPercentResourcesRetainedOnDeath;
-    public static ConfigEntry<float> MaxPercentTotalItemsRetainedOnDeath;
-    public static ConfigEntry<float> GainedSkillLossFactor;
-    public static ConfigEntry<bool> EnableXPLossFromGainedXP;
-    public static ConfigEntry<string> SkillsWithoutDeathPenalty;
-    public static ConfigEntry<string> SkillsWithoutGainDeathPenalty;
-    public static ConfigEntry<bool> EnableSkillsXPLossOnDeath;
-    public static ConfigEntry<float> DeathXPLoss;
     public static ConfigEntry<float> SkillGainOnKills;
     public static ConfigEntry<float> SkillGainOnBossKills;
     public static ConfigEntry<float> SkillGainOnCrafts;
     public static ConfigEntry<float> SkillGainOnResourceGathering;
     public static ConfigEntry<float> SkillGainOnBuilding;
-    public static ConfigEntry<bool> FoodLossOnDeath;
-    public static ConfigEntry<bool> FoodLossOnDeathBySkillLevel;
     public static ConfigEntry<bool> ShowDeathMapMarker;
-    public static ConfigEntry<string> DeathSkillPercentageStyle;
-    public static ConfigEntry<string> MaximumEquipmentRetainedStyle;
     //public static ConfigEntry<bool> EffectRemovalOnDeath;
 
     const string cfgFolder = "Deathlink";
     const string deathChoicesCfg = "DeathChoices.yaml";
     const string deathSettingsCfg = "CharacterSettings.yaml";
     internal static String deathChoicesPath = Path.Combine(Paths.ConfigPath, cfgFolder, deathChoicesCfg);
-    internal static String characterChoicePath = Path.Combine(Paths.ConfigPath, cfgFolder, deathSettingsCfg);
+    internal static String playerSettingsPath = Path.Combine(Paths.ConfigPath, cfgFolder, deathSettingsCfg);
 
     private static CustomRPC deathChoiceRPC;
     private static CustomRPC characterSettingRPC;
@@ -51,6 +39,7 @@ public class ValConfig
         cfg.SaveOnConfigSet = true;
         CreateConfigValues(Config);
         SetupConfigRPCs();
+        LoadYamlConfigs();
     }
 
     public static string GetSecondaryConfigDirectoryPath() {
@@ -72,23 +61,7 @@ public class ValConfig
     // Create Configuration and load it.
     private void CreateConfigValues(ConfigFile Config)
     {
-        MaxPercentResourcesRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentResourcesRetainedOnDeath",20f,"The maximum amount of Resources that can be retained on death, depends on players individual skill.", true, 0f, 100f);
-        MaxPercentTotalItemsRetainedOnDeath = BindServerConfig("DeathProgression","MaxPercentTotalItemsRetainedOnDeath",90f,"The maximum amount of total items that can be retained on death, depends on players individual skill.", true, 0f, 100f);
-        DeathSkillPercentageStyle = BindServerConfig("DeathProgression", "DeathSkillPercentageStyle", "InventorySize",
-            "The maximum number that all of the skill based percentage rolls will use. Either the max number of items carryable or the number of items you currently have.",
-            new AcceptableValueList<string>("InventorySize", "CurrentItems"));
-        MaximumEquipmentRetainedStyle = BindServerConfig("DeathProgression", "MaximumEquipmentRetainedStyle", "AbsoluteValue", "Whether the maximum amount of equipment saved is an absolute value, or a percentage", new AcceptableValueList<string>("Percentage", "AbsoluteValue"));
-
         ItemsNotSkillChecked = BindServerConfig("DeathProgression", "ItemsNotSkillChecked", "Tin,TinOre,Copper,CopperOre,CopperScrap,Bronze,Iron,IronScrap,Silver,SilverOre,DragonEgg,chest_hildir1,chest_hildir2,chest_hildir3,BlackMetal,BlackMetalScrap,DvergrNeedle,MechanicalSpring,FlametalNew,FlametalOreNew", "List of items that are not rolled to be saved through death progression.");
-
-        EnableXPLossFromGainedXP = BindServerConfig("SkillLossModifiers", "EnableXPLossFromGainedXP", true, "When enabled, you loose XP gained since the last death. Repeated deaths regardless of time without skill gains will not result in XP loss, unless EnableSkillsXPLossOnDeath is true.");
-        GainedSkillLossFactor = BindServerConfig("SkillLossModifiers", "GainedSkillLossFactor", 0.2f, "The percentage of skills gains since last death that are lost when dying.", false, 0f, 1f);
-        EnableSkillsXPLossOnDeath = BindServerConfig("SkillLossModifiers", "EnableSkillsXPLossOnDeath", true, "When enabled, you will lose a configurable percentage of XP across all skills on death (this is just like vanilla, but configurable).");
-        DeathXPLoss = BindServerConfig("SkillLossModifiers", "DeathXPLoss", 0.02f, "The percentage of skills that are lost when dying (vanilla is 0.05).", false, 0f, 1f);
-        SkillsWithoutDeathPenalty = BindServerConfig("SkillLossModifiers", "SkillsWithoutDeathPenalty", "Deathlink,Woodcutting,Mining,Pickaxe,Farming,Crafting", "List of skills that are not penalized on death.");
-        SkillsWithoutDeathPenalty.SettingChanged += Death.SkillsChanges.SkillsWithoutDeathPenaltyChange;
-        SkillsWithoutGainDeathPenalty = BindServerConfig("SkillLossModifiers", "SkillsWithoutGainDeathPenalty", "Deathlink", "List of skills that will not have their skill gains reduced on death.");
-        SkillsWithoutGainDeathPenalty.SettingChanged += Death.SkillsChanges.SkillsWithoutGainDeathPenaltyChange;
 
         SkillGainOnKills = BindServerConfig("DeathSkillGain", "SkillGainOnKills", 5f, "Skill Gain from killing non-boss creatures.");
         SkillGainOnBossKills = BindServerConfig("DeathSkillGain", "SkillGainOnBossKills", 20f, "Skill Gain from killing boss creatures.");
@@ -98,8 +71,6 @@ public class ValConfig
 
         SkillProgressUpdateCheckInterval = BindServerConfig("DeathSkillGain", "SkillProgressUpdateCheckInterval", 1f, "How frequently skill gains are computed and added. More frequently means smaller xp gains more often.", true, 0.1f, 5f);
 
-        FoodLossOnDeath = BindServerConfig("DeathTweaks", "FoodLossOnDeath", true, "Whether or not dying will cause you to loose your current food.");
-        FoodLossOnDeathBySkillLevel = BindServerConfig("DeathTweaks", "FoodLossOnDeathBySkillLevel", true, "Whether or not dying will cause you to loose your eaten foods based on skill level.");
         ShowDeathMapMarker = BindServerConfig("DeathTweaks", "ShowDeathMapMarker", true, "Whether or not a map marker is placed on your death location.");
 
         // Debugmode
@@ -130,7 +101,7 @@ public class ValConfig
             if (configFile.Contains(deathSettingsCfg))
             {
                 Logger.LogDebug($"Found Character configuration: {configFile}");
-                characterChoicePath = configFile;
+                playerSettingsPath = configFile;
                 foundCharacterSettings = true;
             }
         }
@@ -152,7 +123,7 @@ public class ValConfig
         if (foundCharacterSettings == false)
         {
             Logger.LogDebug("Character Settings missing, recreating.");
-            using (StreamWriter writetext = new StreamWriter(deathChoicesPath))
+            using (StreamWriter writetext = new StreamWriter(playerSettingsPath))
             {
                 String header = @"#################################################
 # Deathlink - Character settings
@@ -246,7 +217,7 @@ public class ValConfig
 
     private static ZPackage SendCharSettings()
     {
-        return SendFileAsZPackage(characterChoicePath);
+        return SendFileAsZPackage(playerSettingsPath);
     }
     private static ZPackage SendDeathChoices()
     {

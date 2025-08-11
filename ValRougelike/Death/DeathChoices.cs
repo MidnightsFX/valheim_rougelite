@@ -89,6 +89,7 @@ namespace Deathlink.Death
 
                 DeathConfigurationData.playerSettings.Add(Player.m_localPlayer.GetPlayerID(), new DeathConfiguration(){ DeathChoiceLevel = selectedDeathChoice });
                 DeathConfigurationData.CheckAndSetPlayerDeathConfig();
+                DeathConfigurationData.WritePlayerChoices();
                 Hide();
             }
 
@@ -171,7 +172,7 @@ namespace Deathlink.Death
                     anchorMax: new Vector2(0.5f, 0.5f),
                     position: new Vector2(0f, 315f),
                     font: GUIManager.Instance.AveriaSerif,
-                    fontSize: 16,
+                    fontSize: 20,
                     color: Color.white,
                     outline: true,
                     outlineColor: Color.black,
@@ -190,19 +191,20 @@ namespace Deathlink.Death
                 Button bclose = manualCloseButton.GetComponent<Button>();
                 bclose.interactable = true;
                 bclose.onClick.AddListener(Hide);
+                manualCloseButton.SetActive(false);
 
                 var deathpenaltyTitle = GUIManager.Instance.CreateText(
                     text: "Death Penalty",
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, 220f),
+                    position: new Vector2(100f, 220f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 22,
                     color: GUIManager.Instance.ValheimOrange,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 350f,
+                    width: 400f,
                     height: 40f,
                     addContentSizeFitter: false);
                 deathpenaltyTitle.name = "DeathPenaltyTitle";
@@ -212,30 +214,33 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, 160f),
+                    position: new Vector2(150f, 110f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 18,
                     color: Color.white,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 350f,
-                    height: 100f,
+                    width: 500f,
+                    height: 200f,
                     addContentSizeFitter: false);
                 deathpenalty.name = "DeathPenaltyDesc";
                 DeathPenaltyDescription = deathpenalty.GetComponent<Text>();
+                DeathPenaltyDescription.resizeTextForBestFit = true;
+                DeathPenaltyDescription.resizeTextMaxSize = 18;
+                //DeathPenaltyDescription.verticalOverflow = VerticalWrapMode.Overflow;
 
                 var xpTitle = GUIManager.Instance.CreateText(
                     text: "XP Modifiers",
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, 30f),
+                    position: new Vector2(100f, 30f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 22,
                     color: GUIManager.Instance.ValheimOrange,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 350f,
+                    width: 400f,
                     height: 40f,
                     addContentSizeFitter: false);
                 xpTitle.name = "xpModifiersTitle";
@@ -245,30 +250,32 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, -30f),
+                    position: new Vector2(150f, -80f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 16,
                     color: Color.white,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 350f,
-                    height: 100f,
+                    width: 500f,
+                    height: 200f,
                     addContentSizeFitter: false);
                 xpMod.name = "xpModifiersDesc";
                 XPModifiersDescription = xpMod.GetComponent<Text>();
+                XPModifiersDescription.resizeTextForBestFit = true;
+                XPModifiersDescription.resizeTextMaxSize = 18;
 
                 var lootTitle = GUIManager.Instance.CreateText(
                     text: "Loot Modifiers",
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, -130f),
+                    position: new Vector2(100f, -130f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 22,
                     color: GUIManager.Instance.ValheimOrange,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 350f,
+                    width: 400f,
                     height: 40f,
                     addContentSizeFitter: false);
                 lootTitle.name = "lootModifiersTitle";
@@ -278,30 +285,32 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, -190f),
+                    position: new Vector2(150f, -240f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 16,
                     color: Color.white,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 350f,
-                    height: 100f,
+                    width: 500f,
+                    height: 200f,
                     addContentSizeFitter: false);
                 lootDesc.name = "lootModifersDesc";
                 LootModifersDescription = lootDesc.GetComponent<Text>();
+                LootModifersDescription.resizeTextForBestFit = true;
+                LootModifersDescription.resizeTextMaxSize = 18;
 
                 var harvestTitle = GUIManager.Instance.CreateText(
                     text: "Harvest Modifiers",
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, -260f),
+                    position: new Vector2(100f, -260f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 22,
                     color: GUIManager.Instance.ValheimOrange,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 350f,
+                    width: 400f,
                     height: 40f,
                     addContentSizeFitter: false);
                 harvestTitle.name = "harvestModifiersTitle";
@@ -311,26 +320,28 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, -320f),
+                    position: new Vector2(150f, -370f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 16,
                     color: Color.white,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 350f,
-                    height: 100f,
+                    width: 500f,
+                    height: 200f,
                     addContentSizeFitter: false);
                 harvestDesc.name = "harvestModifersDesc";
                 HarvestModifiersDescription = harvestDesc.GetComponent<Text>();
+                HarvestModifiersDescription.resizeTextForBestFit = true;
+                HarvestModifiersDescription.resizeTextMaxSize = 18;
 
                 selectChoiceButton = GUIManager.Instance.CreateButton(
                     text: "Seal Your Fate",
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(-220f, -340f),
-                    width: 160f,
-                    height: 60f);
+                    position: new Vector2(-240f, -290f),
+                    width: 200f,
+                    height: 80f);
                 Button bchoice = selectChoiceButton.GetComponent<Button>();
                 bchoice.interactable = true;
                 bchoice.onClick.AddListener(MakePlayerDeathSelection);
@@ -338,7 +349,7 @@ namespace Deathlink.Death
                 Logger.LogDebug("Setting up scroll entry");
                 // Scroll area
                 ChoicesScrollView = GUIManager.Instance.CreateScrollView(DeathChoicePanel.transform, false, true, 10f, 10f, GUIManager.Instance.ValheimScrollbarHandleColorBlock, Color.grey, 200f, 400f);
-                ChoicesScrollView.transform.localPosition = new Vector2 { x = -150, y = -30 };
+                ChoicesScrollView.transform.localPosition = new Vector2 { x = -260, y = -30 };
                 ChoicesContent = ChoicesScrollView.GetComponentInChildren<ContentSizeFitter>().gameObject;
                 choiceGroup = ChoicesContent.AddComponent<ToggleGroup>();
 
