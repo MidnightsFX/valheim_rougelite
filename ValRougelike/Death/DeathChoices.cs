@@ -146,7 +146,7 @@ namespace Deathlink.Death
                 DeathChoicePanel.SetActive(false);
 
                 var textHeader = GUIManager.Instance.CreateText(
-                    text: "$selection_header",
+                    text: Localization.instance.Localize("$selection_header"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -162,7 +162,7 @@ namespace Deathlink.Death
                 textHeader.name = "DLHeader";
 
                 GameObject descgo = GUIManager.Instance.CreateText(
-                    text: "$selection_description",
+                    text: Localization.instance.Localize("$selection_description"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -181,7 +181,7 @@ namespace Deathlink.Death
                 descgotext.alignment = TextAnchor.MiddleCenter;
 
                 manualCloseButton = GUIManager.Instance.CreateButton(
-                    text: "$close",
+                    text: Localization.instance.Localize("$close"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -194,7 +194,7 @@ namespace Deathlink.Death
                 manualCloseButton.SetActive(false);
 
                 var deathpenaltyTitle = GUIManager.Instance.CreateText(
-                    text: "$death_penalty_header",
+                    text: Localization.instance.Localize("$death_penalty_header"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -210,7 +210,7 @@ namespace Deathlink.Death
                 deathpenaltyTitle.name = "DeathPenaltyTitle";
 
                 var deathpenalty = GUIManager.Instance.CreateText(
-                    text: "$death_penalty_description",
+                    text: Localization.instance.Localize("$death_penalty_description"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -230,7 +230,7 @@ namespace Deathlink.Death
                 //DeathPenaltyDescription.verticalOverflow = VerticalWrapMode.Overflow;
 
                 var xpTitle = GUIManager.Instance.CreateText(
-                    text: "$xp_header",
+                    text: Localization.instance.Localize("$xp_header"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -246,7 +246,7 @@ namespace Deathlink.Death
                 xpTitle.name = "xpModifiersTitle";
 
                 var xpMod = GUIManager.Instance.CreateText(
-                    text: "$xp_mod_description",
+                    text: Localization.instance.Localize("$xp_mod_description"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -265,7 +265,7 @@ namespace Deathlink.Death
                 XPModifiersDescription.resizeTextMaxSize = 18;
 
                 var lootTitle = GUIManager.Instance.CreateText(
-                    text: "$loot_header",
+                    text: Localization.instance.Localize("$loot_header"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -281,7 +281,7 @@ namespace Deathlink.Death
                 lootTitle.name = "lootModifiersTitle";
 
                 var lootDesc = GUIManager.Instance.CreateText(
-                    text: "$loot_modifier_description",
+                    text: Localization.instance.Localize("$loot_modifier_description"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -300,7 +300,7 @@ namespace Deathlink.Death
                 LootModifersDescription.resizeTextMaxSize = 18;
 
                 var harvestTitle = GUIManager.Instance.CreateText(
-                    text: "$harvest_header",
+                    text: Localization.instance.Localize("$harvest_header"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -316,7 +316,7 @@ namespace Deathlink.Death
                 harvestTitle.name = "harvestModifiersTitle";
 
                 var harvestDesc = GUIManager.Instance.CreateText(
-                    text: "$harvest_modifier_description",
+                    text: Localization.instance.Localize("$harvest_modifier_description"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
@@ -335,7 +335,7 @@ namespace Deathlink.Death
                 HarvestModifiersDescription.resizeTextMaxSize = 18;
 
                 selectChoiceButton = GUIManager.Instance.CreateButton(
-                    text: "$deathchoice_select",
+                    text: Localization.instance.Localize("$deathchoice_select"),
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),

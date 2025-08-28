@@ -195,34 +195,34 @@ public class DataObjects
         public string GetLootModifiersDescription() {
             StringBuilder sb = new StringBuilder();
             foreach (var entry in DeathLootModifiers) {
-                sb.AppendLine($"<color={color_good}>{entry.Value.chance*100}%</color> $loot_desc_pt1 {entry.Key} $loot_desc_pt2 {string.Join(",", entry.Value.bonusActions)}");
+                sb.AppendLine(Localization.instance.Localize($"<color={color_good}>{entry.Value.chance*100}%</color> $loot_desc_pt1 {entry.Key} $loot_desc_pt2 {string.Join(",", entry.Value.bonusActions)}"));
             }
-            return Localization.instance.Localize(sb.ToString());
+            return sb.ToString();
         }
 
         public string GetSkillModiferDescription() {
             StringBuilder sb = new StringBuilder();
             foreach (var entry in SkillModifiers) {
                 if (entry.Value.bonusModifer > 1f) {
-                    sb.AppendLine($"{entry.Key} +<color={color_good}>{Mathf.Round((entry.Value.bonusModifer - 1f)*100)}%</color> $xp");
+                    sb.AppendLine(Localization.instance.Localize($"{entry.Key} +<color={color_good}>{Mathf.Round((entry.Value.bonusModifer - 1f)*100)}%</color> $xp"));
                 } else {
-                    sb.AppendLine($"{entry.Key} -<color={color_bad}>{Mathf.Round((1f - entry.Value.bonusModifer)*100)}%</color> $xp");
+                    sb.AppendLine(Localization.instance.Localize($"{entry.Key} -<color={color_bad}>{Mathf.Round((1f - entry.Value.bonusModifer)*100)}%</color> $xp"));
                 }
             }
-            return Localization.instance.Localize(sb.ToString());
+            return sb.ToString();
         }
 
         public string GetResourceModiferDescription() {
             StringBuilder sb = new StringBuilder();
             foreach (var entry in ResourceModifiers) {
                 if (entry.Value.bonusModifer > 1f) {
-                    sb.AppendLine($"{entry.Key} $drops <color={color_good}>{(entry.Value.bonusModifer - 1) * 100}%</color> $more {string.Join(",", entry.Value.bonusActions)}");
+                    sb.AppendLine(Localization.instance.Localize($"{entry.Key} $drops <color={color_good}>{(entry.Value.bonusModifer - 1) * 100}%</color> $more {string.Join(",", entry.Value.bonusActions)}"));
                 } else {
-                    sb.AppendLine($"{entry.Key} $drops <color={color_bad}{(1 - entry.Value.bonusModifer) * 100}%</color> $less {string.Join(",", entry.Value.bonusActions)}");
+                    sb.AppendLine(Localization.instance.Localize($"{entry.Key} $drops <color={color_bad}{(1 - entry.Value.bonusModifer) * 100}%</color> $less {string.Join(",", entry.Value.bonusActions)}"));
                 }
             }
 
-            return Localization.instance.Localize(sb.ToString());
+            return sb.ToString();
         }
 
         public string GetDeathStyleDescription() {
@@ -231,55 +231,55 @@ public class DataObjects
             switch (DeathStyle.itemLossStyle)
             {
                 case ItemLossStyle.None:
-                    sb.AppendLine($"$no_item_loss");
+                    sb.AppendLine(Localization.instance.Localize($"$no_item_loss"));
                     break;
                 case ItemLossStyle.DestroyNonWeaponArmor:
-                    sb.AppendLine($"$no_equipment_loss");
+                    sb.AppendLine(Localization.instance.Localize($"$no_equipment_loss"));
                     break;
                 case ItemLossStyle.DestroyAll:
-                    sb.AppendLine($"$all_item_loss");
+                    sb.AppendLine(Localization.instance.Localize($"$all_item_loss"));
                     break;
                 case ItemLossStyle.DeathlinkBased:
-                    sb.AppendLine($"$limited_saved_deathlink");
-                    sb.AppendLine($"$equipment_kept <color={color_good}>{DeathStyle.minEquipmentKept}</color> - <color={color_good}>{DeathStyle.maxEquipmentKept}</color>");
-                    sb.AppendLine($"$items_kept <color={color_good}>{DeathStyle.minItemsKept}</color> - <color={color_good}>{DeathStyle.maxItemsKept}</color>");
+                    sb.AppendLine(Localization.instance.Localize($"$limited_saved_deathlink"));
+                    sb.AppendLine(Localization.instance.Localize($"$equipment_kept <color={color_good}>{DeathStyle.minEquipmentKept}</color> - <color={color_good}>{DeathStyle.maxEquipmentKept}</color>"));
+                    sb.AppendLine(Localization.instance.Localize($"$items_kept <color={color_good}>{DeathStyle.minItemsKept}</color> - <color={color_good}>{DeathStyle.maxItemsKept}</color>"));
                     break;
             }
             //sb.AppendLine();
             if (DeathStyle.itemLossStyle != ItemLossStyle.DestroyAll) {
                 if (DeathStyle.itemSavedStyle == ItemSavedStyle.OnCharacter) {
-                    sb.AppendLine($"$saved_to_character");
+                    sb.AppendLine(Localization.instance.Localize($"$saved_to_character"));
                 } else {
-                    sb.AppendLine($"$saved_to_tombstone");
+                    sb.AppendLine(Localization.instance.Localize($"$saved_to_tombstone"));
                 }
                 if (DeathStyle.nonSkillCheckedItemAction == NonSkillCheckedItemAction.Tombstone) {
-                    sb.AppendLine($"$non_skill_items_tombstone");
+                    sb.AppendLine(Localization.instance.Localize($"$non_skill_items_tombstone"));
                 }
                 if (DeathStyle.nonSkillCheckedItemAction == NonSkillCheckedItemAction.Save) {
-                    sb.AppendLine($"$non_skill_items_character");
+                    sb.AppendLine(Localization.instance.Localize($"$non_skill_items_character"));
                 }
                 if (DeathStyle.nonSkillCheckedItemAction == NonSkillCheckedItemAction.Destroy) {
-                    sb.AppendLine($"$non_skill_items_destroy");
+                    sb.AppendLine(Localization.instance.Localize($"$non_skill_items_destroy"));
                 }
             }
 
             if (DeathStyle.foodLossOnDeath) {
                 if (DeathStyle.foodLossUsesDeathlink) {
-                    sb.AppendLine($"$food_loss_deathlink");
+                    sb.AppendLine(Localization.instance.Localize($"$food_loss_deathlink"));
                 } else {
-                    sb.AppendLine($"$food_loss");
+                    sb.AppendLine(Localization.instance.Localize($"$food_loss"));
                 }
             }
 
             //sb.AppendLine();
             if (DeathStyle.maxSkillLossPercentage == DeathStyle.minSkillLossPercentage) {
-                sb.AppendLine($"$skill_loss_desc <color={color_bad}>{DeathStyle.maxSkillLossPercentage * 100f}%</color>");
+                sb.AppendLine(Localization.instance.Localize($"$skill_loss_desc <color={color_bad}>{DeathStyle.maxSkillLossPercentage * 100f}%</color>"));
             } else {
-                sb.AppendLine($"$skill_loss_desc <color={color_bad}>{DeathStyle.maxSkillLossPercentage * 100f}%</color> - <color={color_bad}>{DeathStyle.minSkillLossPercentage * 100f}%</color> $influenced_by_deathlink");
+                sb.AppendLine(Localization.instance.Localize($"$skill_loss_desc <color={color_bad}>{DeathStyle.maxSkillLossPercentage * 100f}%</color> - <color={color_bad}>{DeathStyle.minSkillLossPercentage * 100f}%</color> $influenced_by_deathlink"));
             }
                 
 
-            return Localization.instance.Localize(sb.ToString());
+            return sb.ToString();
         }
     }
 

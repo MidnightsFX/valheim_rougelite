@@ -12,6 +12,7 @@
 	- What happens to your items on death
 	- How many items you can keep on death
 	- How much food you keep on death
+- Dependencies have been updated to current version of Jotun
 ```
 
   **0.5.5**

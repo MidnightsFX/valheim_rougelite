@@ -8,7 +8,12 @@ Additionally, death is one of the few things that does not progress through the 
 Deathlink changes that by providing a skill that levels up faster the longer you stay alive,
 and scales your death changes based on that skill.
 
-![deathlink_selection](https://i.postimg.cc/J75nTCQq/image.png)
+
+## Example Deathlink Choices
+| Vanilla | Minimal | Hardcore |
+|:-:|:-:|:-:|
+| ![deathlink_selection](https://i.postimg.cc/02RQ74cG/image.png)  | ![deathlink_selection2](https://i.postimg.cc/PrWqyMRg/image.png)  |  ![deathlink_selection3](https://i.postimg.cc/RhmkZwLt/image.png) |
+
 
 ## Configuration
 Deathlink has extensive yaml based configuration options. However it can be used with the default configuration.

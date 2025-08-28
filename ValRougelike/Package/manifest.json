@@ -4,8 +4,8 @@
   "version_number": "0.7.0",
   "website_url": "https://discord.gg/Dmr9PQTy9m",
   "dependencies": [
-    "denikson-BepInExPack_Valheim-5.4.2202",
-    "ValheimModding-Jotunn-2.22.0",
+    "denikson-BepInExPack_Valheim-5.4.2332",
+    "ValheimModding-Jotunn-2.26.1",
     "ValheimModding-YamlDotNet-16.3.1"
   ]
 }
