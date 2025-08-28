@@ -11,7 +11,6 @@ namespace Deathlink.Death;
 public static class SkillsChanges
 {
     public static List<Skills.SkillType> skills_to_avoid_standard_death_penalty = new List<Skills.SkillType> { };
-    public static List<Skills.SkillType> skills_to_avoid_gain_death_penalty = new List<Skills.SkillType> { };
 
     [HarmonyPatch(typeof(Skills), nameof(Skills.OnDeath))]
     static class OnDeath_Patch
@@ -40,9 +39,7 @@ public static class SkillsChanges
                 skillDatum.Value.m_accumulator = 0f;
             }
 
-            if (Player.m_localPlayer != null) {
-                Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "$msg_skills_lowered");
-            }
+            Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, "$msg_skills_lowered");
         }
     }
     

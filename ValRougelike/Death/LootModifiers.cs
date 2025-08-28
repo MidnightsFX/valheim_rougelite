@@ -11,7 +11,7 @@ namespace Deathlink.Death
     public static class LootModifiers
     {
         [HarmonyPatch(typeof(CharacterDrop))]
-        public static class CalculateLootPerLevelStyle
+        public static class CalculateLootByModifiers
         {
             //[HarmonyDebug]
             [HarmonyPostfix]

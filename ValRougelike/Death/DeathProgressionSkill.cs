@@ -28,6 +28,9 @@ public static class DeathProgressionSkill
         deathskill.Identifier = "midnightsfx.deathskill";
         deathskill.IncreaseStep = 0.1f;
         DeathSkill = SkillManager.Instance.AddSkill(deathskill);
+        if (!SkillsChanges.skills_to_avoid_standard_death_penalty.Contains(DeathSkill)) {
+            SkillsChanges.skills_to_avoid_standard_death_penalty.Add(DeathSkill);
+        }
     }
 
 

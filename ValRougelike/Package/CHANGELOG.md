@@ -1,3 +1,19 @@
+  **0.7.0**
+---
+```
+- Multiplayer Overhaul
+- Death configuration is now managed by profiles
+- Players on a server can choose which deathlink profile they want to use
+- Selected choice and bonuses/penalties are visible in the compendium
+- Death profiles can influence many aspects
+	- Increase/decreased gathering yields
+	- Drops from enemies
+	- Skill gains/penalties
+	- What happens to your items on death
+	- How many items you can keep on death
+	- How much food you keep on death
+```
+
   **0.5.5**
 ---
 ```

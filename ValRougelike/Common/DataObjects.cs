@@ -154,9 +154,16 @@ public class DataObjects
 
         public float GetResouceEarlyCache(string prefab) {
             if (CalculatedResourceModsCached == false) {
-                foreach(var entry in ResourceModifiers) {
-                    foreach(string pnam in entry.Value.prefabs) {
-                        CalculatedResourceMods.Add(pnam, entry.Value.bonusModifer);
+                Logger.LogDebug($"Building cache entry for {prefab}");
+                if (ResourceModifiers != null) {
+                    foreach (var entry in ResourceModifiers) {
+                        Logger.LogDebug($"Checking resource modifiers {entry.Value.prefabs}");
+                        if (entry.Value.prefabs != null) {
+                            foreach (string pnam in entry.Value.prefabs) {
+                                Logger.LogDebug($"Building cache entry for {pnam} - {entry.Value.bonusModifer}");
+                                CalculatedResourceMods.Add(pnam, entry.Value.bonusModifer);
+                            }
+                        }
                     }
                 }
                 CalculatedResourceModsCached = true;
@@ -166,6 +173,7 @@ public class DataObjects
         }
 
         public float GetResouceEarlyCache(GameObject prefab) {
+            if (prefab == null) { return 1f; }
             return GetResouceEarlyCache(prefab.name);
         }
 
@@ -184,37 +192,37 @@ public class DataObjects
             return modifier_sum;
         }
 
-        public string GetLootModifiers() {
+        public string GetLootModifiersDescription() {
             StringBuilder sb = new StringBuilder();
             foreach (var entry in DeathLootModifiers) {
-                sb.AppendLine($"<color={color_good}>{entry.Value.chance*100}%</color> chance of {entry.Key} dropping from {string.Join(",", entry.Value.bonusActions)}");
+                sb.AppendLine($"<color={color_good}>{entry.Value.chance*100}%</color> $loot_desc_pt1 {entry.Key} $loot_desc_pt2 {string.Join(",", entry.Value.bonusActions)}");
             }
-            return sb.ToString();
+            return Localization.instance.Localize(sb.ToString());
         }
 
         public string GetSkillModiferDescription() {
             StringBuilder sb = new StringBuilder();
             foreach (var entry in SkillModifiers) {
                 if (entry.Value.bonusModifer > 1f) {
-                    sb.AppendLine($"{entry.Key} +<color={color_good}>{Mathf.Round((entry.Value.bonusModifer - 1f)*100)}%</color> XP");
+                    sb.AppendLine($"{entry.Key} +<color={color_good}>{Mathf.Round((entry.Value.bonusModifer - 1f)*100)}%</color> $xp");
                 } else {
-                    sb.AppendLine($"{entry.Key} -<color={color_bad}>{Mathf.Round((1f - entry.Value.bonusModifer)*100)}%</color> XP");
+                    sb.AppendLine($"{entry.Key} -<color={color_bad}>{Mathf.Round((1f - entry.Value.bonusModifer)*100)}%</color> $xp");
                 }
             }
-            return sb.ToString();
+            return Localization.instance.Localize(sb.ToString());
         }
 
         public string GetResourceModiferDescription() {
             StringBuilder sb = new StringBuilder();
             foreach (var entry in ResourceModifiers) {
                 if (entry.Value.bonusModifer > 1f) {
-                    sb.AppendLine($"{entry.Key} drops <color={color_good}>{(entry.Value.bonusModifer - 1) * 100}%</color> more when {string.Join(",", entry.Value.bonusActions)}");
+                    sb.AppendLine($"{entry.Key} $drops <color={color_good}>{(entry.Value.bonusModifer - 1) * 100}%</color> $more {string.Join(",", entry.Value.bonusActions)}");
                 } else {
-                    sb.AppendLine($"{entry.Key} drops <color={color_bad}{(1 - entry.Value.bonusModifer) * 100}%</color> less when {string.Join(",", entry.Value.bonusActions)}");
+                    sb.AppendLine($"{entry.Key} $drops <color={color_bad}{(1 - entry.Value.bonusModifer) * 100}%</color> $less {string.Join(",", entry.Value.bonusActions)}");
                 }
             }
 
-            return sb.ToString();
+            return Localization.instance.Localize(sb.ToString());
         }
 
         public string GetDeathStyleDescription() {
@@ -223,55 +231,55 @@ public class DataObjects
             switch (DeathStyle.itemLossStyle)
             {
                 case ItemLossStyle.None:
-                    sb.AppendLine($"Items will not be lost on death.");
+                    sb.AppendLine($"$no_item_loss");
                     break;
                 case ItemLossStyle.DestroyNonWeaponArmor:
-                    sb.AppendLine($"Non-equipment gets destroyed on death.");
+                    sb.AppendLine($"$no_equipment_loss");
                     break;
                 case ItemLossStyle.DestroyAll:
-                    sb.AppendLine($"All items will be destroyed on death.");
+                    sb.AppendLine($"$all_item_loss");
                     break;
                 case ItemLossStyle.DeathlinkBased:
-                    sb.AppendLine($"A limited number of items will be saved, based on Deathlink progression.");
-                    sb.AppendLine($"Equipment kept on death <color={color_good}>{DeathStyle.minEquipmentKept}</color> - <color={color_good}>{DeathStyle.maxEquipmentKept}</color>");
-                    sb.AppendLine($"Items kept on death <color={color_good}>{DeathStyle.minItemsKept}</color> - <color={color_good}>{DeathStyle.maxItemsKept}</color>");
+                    sb.AppendLine($"$limited_saved_deathlink");
+                    sb.AppendLine($"$equipment_kept <color={color_good}>{DeathStyle.minEquipmentKept}</color> - <color={color_good}>{DeathStyle.maxEquipmentKept}</color>");
+                    sb.AppendLine($"$items_kept <color={color_good}>{DeathStyle.minItemsKept}</color> - <color={color_good}>{DeathStyle.maxItemsKept}</color>");
                     break;
             }
             //sb.AppendLine();
             if (DeathStyle.itemLossStyle != ItemLossStyle.DestroyAll) {
                 if (DeathStyle.itemSavedStyle == ItemSavedStyle.OnCharacter) {
-                    sb.AppendLine($"Saved items will stay on your character.");
+                    sb.AppendLine($"$saved_to_character");
                 } else {
-                    sb.AppendLine($"Saved items will be saved to your tombstone.");
+                    sb.AppendLine($"$saved_to_tombstone");
                 }
                 if (DeathStyle.nonSkillCheckedItemAction == NonSkillCheckedItemAction.Tombstone) {
-                    sb.AppendLine($"Non-skill checked items will be saved to your tombstone.");
+                    sb.AppendLine($"$non_skill_items_tombstone");
                 }
                 if (DeathStyle.nonSkillCheckedItemAction == NonSkillCheckedItemAction.Save) {
-                    sb.AppendLine($"Non-skill checked items will stay on your character.");
+                    sb.AppendLine($"$non_skill_items_character");
                 }
                 if (DeathStyle.nonSkillCheckedItemAction == NonSkillCheckedItemAction.Destroy) {
-                    sb.AppendLine($"Non-skill checked items will be destroyed.");
+                    sb.AppendLine($"$non_skill_items_destroy");
                 }
             }
 
             if (DeathStyle.foodLossOnDeath) {
                 if (DeathStyle.foodLossUsesDeathlink) {
-                    sb.AppendLine($"Consumed food loss can be reduced by Deathlink progression.");
+                    sb.AppendLine($"$food_loss_deathlink");
                 } else {
-                    sb.AppendLine($"Consumed food will be lost on death.");
+                    sb.AppendLine($"$food_loss");
                 }
             }
 
             //sb.AppendLine();
             if (DeathStyle.maxSkillLossPercentage == DeathStyle.minSkillLossPercentage) {
-                sb.AppendLine($"Skill loss on death <color={color_bad}>{DeathStyle.maxSkillLossPercentage * 100f}%</color>");
+                sb.AppendLine($"$skill_loss_desc <color={color_bad}>{DeathStyle.maxSkillLossPercentage * 100f}%</color>");
             } else {
-                sb.AppendLine($"Skill loss on death <color={color_bad}>{DeathStyle.maxSkillLossPercentage * 100f}%</color> - <color={color_bad}>{DeathStyle.minSkillLossPercentage * 100f}%</color> influenced by Deathlink progression.");
+                sb.AppendLine($"$skill_loss_desc <color={color_bad}>{DeathStyle.maxSkillLossPercentage * 100f}%</color> - <color={color_bad}>{DeathStyle.minSkillLossPercentage * 100f}%</color> $influenced_by_deathlink");
             }
                 
 
-            return sb.ToString();
+            return Localization.instance.Localize(sb.ToString());
         }
     }
 

@@ -15,7 +15,7 @@ namespace Deathlink.Common
             {
                 "Vanilla", new DeathChoiceLevel() {
                     DisplayName = "Vanilla",
-                    DeathStyle = new DeathProgressionDetails() { itemLossStyle = ItemLossStyle.None, itemSavedStyle = ItemSavedStyle.Tombstone, minSkillLossPercentage = 0.05f, maxSkillLossPercentage = 0.05f },
+                    DeathStyle = new DeathProgressionDetails() { itemLossStyle = ItemLossStyle.None, foodLossOnDeath = true, itemSavedStyle = ItemSavedStyle.Tombstone, minSkillLossPercentage = 0.05f, maxSkillLossPercentage = 0.05f },
                     DeathLootModifiers = new Dictionary<string, DeathLootModifier>() { },
                     ResourceModifiers = new Dictionary<string, DeathResourceModifier> { },
                     SkillModifiers = new Dictionary<string, DeathSkillModifier>() { },
@@ -24,7 +24,7 @@ namespace Deathlink.Common
             {
                 "Rougelike1", new DeathChoiceLevel() {
                     DisplayName = "ShieldBearer",
-                    DeathStyle = new DeathProgressionDetails() { itemLossStyle = ItemLossStyle.DeathlinkBased, itemSavedStyle = ItemSavedStyle.Tombstone, minEquipmentKept = 3, maxEquipmentKept = 9, minItemsKept = 3, maxItemsKept = 15, minSkillLossPercentage = 0.03f, maxSkillLossPercentage = 0.13f },
+                    DeathStyle = new DeathProgressionDetails() { itemLossStyle = ItemLossStyle.DeathlinkBased, foodLossUsesDeathlink = true, itemSavedStyle = ItemSavedStyle.Tombstone, minEquipmentKept = 3, maxEquipmentKept = 9, minItemsKept = 3, maxItemsKept = 15, minSkillLossPercentage = 0.03f, maxSkillLossPercentage = 0.13f },
                     DeathLootModifiers = new Dictionary<string, DeathLootModifier>() { },
                     ResourceModifiers = new Dictionary<string, DeathResourceModifier> {
                         { "Wood", new DeathResourceModifier() { prefabs = new List<string>() { "Wood", "FineWood", "RoundLog", "YggdrasilWood", "Blackwood" }, bonusModifer = 1.1f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } }
