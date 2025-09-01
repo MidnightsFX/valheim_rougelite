@@ -1,3 +1,10 @@
+  **0.7.1**
+---
+```
+- Fixes divide by zero for rarity based loot rolls
+- Adds harvest multipliers support to pickable items
+```
+
   **0.7.0**
 ---
 ```

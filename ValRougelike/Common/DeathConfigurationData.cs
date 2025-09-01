@@ -74,7 +74,7 @@ namespace Deathlink.Common
                     },
                     ResourceModifiers = new Dictionary<string, DeathResourceModifier> {
                         { "Wood", new DeathResourceModifier() { prefabs = new List<string>() { "Wood", "FineWood", "RoundLog", "YggdrasilWood", "Blackwood" }, bonusModifer = 2.0f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } },
-                        { "Stone", new DeathResourceModifier() { prefabs = new List<string>() { "Stone", "BlackMarble", "Grausten" }, bonusModifer = 2.0f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } },
+                        { "Stone", new DeathResourceModifier() { prefabs = new List<string>() { "Flint", "Stone", "BlackMarble", "Grausten" }, bonusModifer = 2.0f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } },
                         { "Ore", new DeathResourceModifier() { prefabs = new List<string>() { "CopperOre", "TinOre", "IronScrap", "SilverOre", "BlackMetalScrap", "CopperScrap", "FlametalOreNew" }, bonusModifer = 2.0f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } }
                     },
                     SkillModifiers = new Dictionary<string, DeathSkillModifier>() {
@@ -108,13 +108,13 @@ namespace Deathlink.Common
             try {
                 UpdateDeathLevelsConfig(File.ReadAllText(ValConfig.deathChoicesPath));
             }
-            catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the Creature Level values, defaults will be used. Exception: {e}"); }
+            catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the Death choice Level values, defaults will be used. Exception: {e}"); }
 
             try
             {
                 UpdatePlayerConfigSettings(File.ReadAllText(ValConfig.playerSettingsPath));
             }
-            catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the Creature Level values, defaults will be used. Exception: {e}"); }
+            catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the player choice configs, defaults will be used. Exception: {e}"); }
         }
 
         public static void CheckAndSetPlayerDeathConfig() {

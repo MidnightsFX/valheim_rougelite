@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using static CharacterDrop;
 using static InventoryGrid;
 
 namespace Deathlink.Death
@@ -19,6 +20,37 @@ namespace Deathlink.Death
             {
                 if (Deathlink.pcfg().ResourceModifiers != null && Deathlink.pcfg().ResourceModifiers.Count > 0 && hitData != null && Player.m_localPlayer != null && hitData.m_attacker == Player.m_localPlayer.GetZDOID()) {
                     IncreaseDrops(__instance.m_dropWhenDestroyed, __instance.transform.position);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Pickable), nameof(Pickable.Drop))]
+        public static class IncreaseDropsPickable {
+            private static void Prefix(Pickable __instance, GameObject prefab, int offset) {
+                //Logger.LogDebug($"Checking pickable {prefab.gameObject}");
+
+                if (Deathlink.pcfg().ResourceModifiers != null && Deathlink.pcfg().ResourceModifiers.Count > 0 && Player.m_localPlayer != null) {
+                    float mod = Deathlink.pcfg().GetResouceEarlyCache(prefab.gameObject) - 1f;
+                    int extra = 0;
+                    while (mod> 0f) {
+                        float chance = UnityEngine.Random.value;
+                        Logger.LogDebug($"Checking to increase drops {chance} <= {mod}");
+                        if (chance <= mod) {
+                            //Logger.LogDebug($"Added 1 {prefab.gameObject}");
+                            extra += 1;
+                        }
+                        mod -= 1f;
+                    }
+                    if (extra > 0) {
+                        Vector2 vector = UnityEngine.Random.insideUnitCircle * 0.2f;
+                        Vector3 position = __instance.transform.position + Vector3.up * __instance.m_spawnOffset + new Vector3(vector.x, 0.5f * (float)offset, vector.y);
+                        Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0, 360), 0f);
+                        int times = 0;
+                        while (times < extra) {
+                            UnityEngine.Object.Instantiate(prefab, position, rotation);
+                            times += 1;
+                        }
+                    }
                 }
             }
         }
@@ -68,7 +100,10 @@ namespace Deathlink.Death
 
             // Randomize total drop bonus max size?
             int total_drop_increase_size = UnityEngine.Random.Range(drops.m_dropMin, drops.m_dropMax);
-            int per_drop_average = Mathf.RoundToInt(total_drop_increase_size / drops.m_drops.Count);
+            int mindrop = drops.m_drops.Count;
+            if (total_drop_increase_size == 0) { total_drop_increase_size = 1; }
+            if (mindrop == 0) { mindrop = 1; }
+            int per_drop_average = Mathf.RoundToInt(total_drop_increase_size / mindrop);
             // Check for loot bonuses on the prefabs in this
             foreach (var drop in drops.m_drops)
             {
