@@ -120,7 +120,9 @@ public class DataObjects
             }
             List<KeyValuePair<GameObject, int>> lootresults = new List<KeyValuePair<GameObject, int>>();
             foreach (var kvp in KillLootModifiers) {
-                if (UnityEngine.Random.value < kvp.Value.Item1) {
+                float chanceroll = UnityEngine.Random.value;
+                Logger.LogDebug($"Rolling chance loot for: {kvp.Key.gameObject.name} {chanceroll} < {kvp.Value.Item1}");
+                if (chanceroll < kvp.Value.Item1) {
                     lootresults.Add(new KeyValuePair<GameObject, int>(kvp.Key, kvp.Value.Item2));
                 }
             }

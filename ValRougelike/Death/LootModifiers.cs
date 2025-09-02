@@ -30,9 +30,19 @@ namespace Deathlink.Death
                         if (amount >= 1){ modified.Add(new KeyValuePair<GameObject, int>(key: kvp.Key, value: amount)); }
                     }
                 }
-
+                //Logger.LogDebug($"Checking for kill random loot.");
                 List<KeyValuePair<GameObject, int>> killloot = Deathlink.pcfg().RollKillLoot();
-                if (killloot.Count > 0) { modified.AddRange(killloot); }
+                if (killloot.Count > 0) {
+                    //Logger.LogDebug($"Kill Dropping {killloot.Count} types of loot.");
+                    foreach (var kvp in killloot) {
+                        int i = 0;
+                        while(i < kvp.Value) {
+                            GameObject.Instantiate(kvp.Key, __instance.transform.position, Quaternion.identity);
+                            i++;
+                        }
+                        
+                    }
+                }
 
                 __result = modified;
             }

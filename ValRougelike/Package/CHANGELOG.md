@@ -1,3 +1,9 @@
+  **0.7.2**
+---
+```
+- Fixes probability comparisons for low chance kill drops
+```
+
   **0.7.1**
 ---
 ```
