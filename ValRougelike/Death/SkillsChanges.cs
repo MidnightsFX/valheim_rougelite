@@ -2,9 +2,7 @@
 using HarmonyLib;
 using Deathlink.Common;
 using static Skills;
-using Jotunn.Managers;
-using System.Linq;
-using System;
+using UnityEngine;
 
 namespace Deathlink.Death;
 
@@ -17,9 +15,15 @@ public static class SkillsChanges
     {
         private static bool Prefix(Skills __instance)
         {
+            // Skills not lowered on a soft death
+            if (__instance.m_player.m_seman.HaveStatusEffect(SEMan.s_statusEffectSoftDeath)) {
+                return false;
+            }
             if (Deathlink.pcfg().DeathStyle.skillLossOnDeath) {
                 // Do a decrease of skills, with our configuration
-                float skill_based_diff = DeathProgressionSkill.DeathSkillCalculatePercentWithBonus() * (Deathlink.pcfg().DeathStyle.maxSkillLossPercentage - Deathlink.pcfg().DeathStyle.minSkillLossPercentage);
+                
+                float skill_based_diff = Mathf.Lerp(Deathlink.pcfg().DeathStyle.maxSkillLossPercentage, Deathlink.pcfg().DeathStyle.minSkillLossPercentage, DeathProgressionSkill.DeathSkillCalculatePercentWithBonus());
+                Logger.LogDebug($"{skill_based_diff}");
                 LowerConfigurableSkills(__instance, skill_based_diff);
             }
 
@@ -37,6 +41,14 @@ public static class SkillsChanges
                 float num = skillDatum.Value.m_level * factor;
                 skillDatum.Value.m_level -= num;
                 skillDatum.Value.m_accumulator = 0f;
+            }
+            if (Deathlink.RustyAlmanacClassesLoaded) {
+                if (ValConfig.EnableAlmanacClassesXPLossOnDeath.Value) {
+                    int level = AlmanacClasses.API.ClassesAPI.GetLevel();
+                    int xploss = Mathf.RoundToInt(level * factor * 500f * ValConfig.AlmanacClassesXPLossScale.Value) * -1;
+                    Logger.LogDebug($"Almanac (lvl {level}) XP Loss: {xploss}");
+                    AlmanacClasses.API.ClassesAPI.AddEXP(xploss);
+                }
             }
 
             Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, "$msg_skills_lowered");

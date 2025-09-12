@@ -1,3 +1,12 @@
+  **0.7.3**
+---
+```
+- Kill drops rewards now require the player has hit the target creature
+- Death XP Penalty is scaled correctly
+- Added an integration for Almanac Classes, which allows gaining and loosing Almanac XP
+```
+
+
   **0.7.2**
 ---
 ```

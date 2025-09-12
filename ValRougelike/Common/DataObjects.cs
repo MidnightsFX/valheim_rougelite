@@ -159,7 +159,7 @@ public class DataObjects
                 Logger.LogDebug($"Building cache entry for {prefab}");
                 if (ResourceModifiers != null) {
                     foreach (var entry in ResourceModifiers) {
-                        Logger.LogDebug($"Checking resource modifiers {entry.Value.prefabs}");
+                        // Logger.LogDebug($"Checking resource modifiers {entry.Value.prefabs}");
                         if (entry.Value.prefabs != null) {
                             foreach (string pnam in entry.Value.prefabs) {
                                 Logger.LogDebug($"Building cache entry for {pnam} - {entry.Value.bonusModifer}");

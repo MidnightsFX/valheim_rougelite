@@ -118,6 +118,13 @@ public static class DeathProgressionSkill
                 float total_xp_from_actions = bosskillxp + killxp + buildxp + buildxp + treeharvestxp + mineharvestxp + craftupgradexp;
                 float skillbonus = ((float)Math.Log(__instance.m_timeSinceDeath) / 5) * 0.5f;
                 float curved_xp = (skillbonus * total_xp_from_actions);
+
+                if (Deathlink.RustyAlmanacClassesLoaded) {
+                    int almXP = Mathf.RoundToInt(curved_xp * ValConfig.AlmanacClassesXPGainScale.Value);
+                    Logger.LogDebug($"Almanac XP Gain {almXP}");
+                    AlmanacClasses.API.ClassesAPI.AddEXP(almXP);
+                }
+
                 Logger.LogDebug($"DeathProgression skill bonus from survival (survive time: {__instance.m_timeSinceDeath}) {skillbonus} x {total_xp_from_actions} = {curved_xp}");
                 Player.m_localPlayer.RaiseSkill(DeathSkill, curved_xp);
             }

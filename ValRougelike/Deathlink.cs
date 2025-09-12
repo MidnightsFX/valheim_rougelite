@@ -8,6 +8,7 @@ using Jotunn.Managers;
 using Jotunn.Utils;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -19,15 +20,17 @@ namespace Deathlink
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     [NetworkCompatibility(CompatibilityLevel.ClientMustHaveMod, VersionStrictness.Minor)]
     [BepInDependency("Azumatt.AzuExtendedPlayerInventory", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("RustyMods.AlmanacClasses", BepInDependency.DependencyFlags.SoftDependency)]
     internal class Deathlink : BaseUnityPlugin
     {
         public const string PluginGUID = "MidnightsFX.Deathlink";
         public const string PluginName = "Deathlink";
-        public const string PluginVersion = "0.7.2";
+        public const string PluginVersion = "0.7.3";
 
         public ValConfig cfg;
         internal static AssetBundle EmbeddedResourceBundle;
         internal static bool AzuEPILoaded = false;
+        internal static bool RustyAlmanacClassesLoaded = false;
 
         // Use this class to add your own localization to the game
         // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
@@ -46,6 +49,10 @@ namespace Deathlink
             if (AzuExtendedPlayerInventory.API.IsLoaded()) {
                 AzuEPILoaded = true;
             }
+
+            if (BepInExUtils.GetPlugins().Keys.Contains("RustyMods.AlmanacClasses")) {
+                RustyAlmanacClassesLoaded = true;
+            } 
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
             DeathConfigurationData.Init();
