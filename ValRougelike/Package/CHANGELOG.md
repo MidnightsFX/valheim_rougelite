@@ -1,3 +1,9 @@
+  **0.7.4**
+---
+```
+- Fixes an issue re-adding remote deathlink configurations
+```
+
   **0.7.3**
 ---
 ```

@@ -180,6 +180,7 @@ namespace Deathlink.Common
             var added_cfgs = yamldeserializer.Deserialize<Dictionary<long, DeathConfiguration>>(rawyaml);
 
             foreach (var kvp in added_cfgs) {
+                if (playerSettings.ContainsKey(kvp.Key)) { continue; }
                 playerSettings.Add(kvp.Key, kvp.Value);
             }
         }
