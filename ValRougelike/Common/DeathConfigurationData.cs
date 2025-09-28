@@ -133,7 +133,7 @@ namespace Deathlink.Common
             if (playerSettings.ContainsKey(playerID)) {
                 string selectedDeathConfig = playerSettings[playerID].DeathChoiceLevel;
                 if (DeathLevels.ContainsKey(selectedDeathConfig)) {
-                    Logger.LogDebug("Player deathlink configurations set.");
+                    Logger.LogDebug($"Player deathlink configurations set {selectedDeathConfig}");
                     playerDeathConfiguration = DeathLevels[selectedDeathConfig];
                 } else {
                     Logger.LogDebug("Player preference setting is not an available config, using fallback");

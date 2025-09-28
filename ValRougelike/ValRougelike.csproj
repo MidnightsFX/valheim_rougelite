@@ -74,6 +74,7 @@
     <Compile Include="Common\DataObjects.cs" />
     <Compile Include="Common\DeathConfigurationData.cs" />
     <Compile Include="Common\Logger.cs" />
+    <Compile Include="Common\Utils.cs" />
     <Compile Include="Common\ValConfig.cs" />
     <Compile Include="Death\Compendium.cs" />
     <Compile Include="Death\DeathChoices.cs" />

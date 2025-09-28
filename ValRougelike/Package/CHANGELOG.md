@@ -1,3 +1,9 @@
+  **0.7.5**
+---
+```
+- Improves Death transpiler compatibility with other mods
+```
+
   **0.7.4**
 ---
 ```

@@ -1,7 +1,7 @@
 ﻿{
   "name": "Deathlink",
   "description": "Configurable death choices for all your players.",
-  "version_number": "0.7.4",
+  "version_number": "0.7.5",
   "website_url": "https://discord.gg/Dmr9PQTy9m",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2332",

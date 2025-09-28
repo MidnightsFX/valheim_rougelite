@@ -1,28 +1,31 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using Deathlink.Common;
 using HarmonyLib;
-using UnityEngine;
-using Deathlink.Common;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection.Emit;
+using UnityEngine;
 
 namespace Deathlink.Death;
 
 public static class OnDeathChanges
 {
+
     [HarmonyPatch(typeof(Player))]
     public static class OnDeath_Tombstone_Patch
     {
         [HarmonyTranspiler]
         [HarmonyPatch(nameof(Player.OnDeath))]
-        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions /*, ILGenerator generator*/)
+        static IEnumerable<CodeInstruction> ConstructorTranspiler( IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
-            var codeMatcher = new CodeMatcher(instructions);
+            var codeMatcher = new CodeMatcher(instructions, generator);
             codeMatcher.MatchStartForward(
                 new CodeMatch(OpCodes.Ldarg_0),
-                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Player), nameof(Player.CreateTombStone)))
-                ).Advance(1).RemoveInstructions(4).InsertAndAdvance(
-                Transpilers.EmitDelegate(ModifyDeath)
-                ).ThrowIfNotMatch("Unable to patch Deathlink player death changes.");
+                new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Player), nameof(Player.CreateTombStone))))
+                .Advance(1)
+                .InsertAndAdvance(Transpilers.EmitDelegate(ModifyDeath))
+                .CreateLabelOffset(out Label label, offset: 4)
+                .InsertAndAdvance(new CodeInstruction(OpCodes.Br, label))
+                .ThrowIfNotMatch("Unable to patch Deathlink player death changes.");
 
             return codeMatcher.Instructions();
         }
@@ -84,7 +87,7 @@ public static class OnDeathChanges
             string[] nonSkillCheckedItems = ValConfig.ItemsNotSkillChecked.Value.Split(',');
             foreach (ItemDrop.ItemData item in playerItems)
             {
-                if (nonSkillCheckedItems.Contains(item.m_dropPrefab.name)) {
+                if (item.m_dropPrefab != null && nonSkillCheckedItems.Contains(item.m_dropPrefab.name)) {
                     playerNonSkillCheckItems.Add(item);
                 } else {
                     playerItemsWithoutNonSkillCheckedItems.Add(item);
@@ -132,7 +135,7 @@ public static class OnDeathChanges
                 // shuffle inventory items that are not equipment
                 foreach (var item in nonEquippableItems) {
                     if (numberOfItemsSavable > 0 && items_to_keep > 0) {
-                        Logger.LogDebug($"Saving {item.m_dropPrefab.name}");
+                        Logger.LogDebug($"Saving {item.m_shared.m_name}");
                         savedItems.Add(item);
                         numberOfItemsSavable -= 1;
                         items_to_keep -= 1;
@@ -153,7 +156,7 @@ public static class OnDeathChanges
                 foreach (var item in AzuExtendedPlayerInventory.API.GetQuickSlotsItems())
                 {
                     if (savedItems.Contains(item)) { continue; }
-                    Logger.LogDebug($"Removing quickslot item that was not saved {item.m_dropPrefab.name}");
+                    Logger.LogDebug($"Removing quickslot item that was not saved {item.m_shared.m_name}");
                     playerItemsRemoved.Add(item);
                     //instance.UnequipItem(item);
                     //instance.m_inventory.RemoveItem(item);
