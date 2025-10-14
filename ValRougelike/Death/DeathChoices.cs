@@ -14,7 +14,12 @@ namespace Deathlink.Death
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Show))]
         public static class ShowDeathChoiceUI {
             public static void Postfix(InventoryGui __instance) {
-                if (Player.m_localPlayer != null && DeathConfigurationData.playerSettings.ContainsKey(Player.m_localPlayer.GetPlayerID())) { return; }
+                if (ValConfig.UsePrivateKeysForDeathChoice.Value) {
+                    if (Player.m_localPlayer != null && Player.m_localPlayer.PlayerHasUniqueKey(DeathChoiceKey)) { return; }
+                } else {
+                    if (Player.m_localPlayer != null && DeathConfigurationData.playerSettings.ContainsKey(Player.m_localPlayer.GetPlayerID())) { return; }
+                }
+                
                 if (__instance.gameObject.GetComponent<DeathChoiceUI>() == null) { __instance.gameObject.AddComponent<DeathChoiceUI>(); }
                 DeathChoiceUI.Instance.Show();
             }
@@ -69,7 +74,9 @@ namespace Deathlink.Death
 
             public void Hide() {
                 // Logger.LogDebug("Closing");
-                DeathChoicePanel?.SetActive(false);
+                if (DeathChoicePanel != null) {
+                    DeathChoicePanel.SetActive(false);
+                }
                 GUIManager.BlockInput(false);
             }
 
@@ -82,8 +89,13 @@ namespace Deathlink.Death
                     Logger.LogWarning("No death type selected");
                     return;
                 }
-
-                DeathConfigurationData.playerSettings.Add(Player.m_localPlayer.GetPlayerID(), new DeathConfiguration(){ DeathChoiceLevel = selectedDeathChoice });
+                //Logger.LogDebug($"Player selected death type {selectedDeathChoice}");
+                long playerID = Player.m_localPlayer.GetPlayerID();
+                if (DeathConfigurationData.playerSettings.ContainsKey(playerID)) {
+                    DeathConfigurationData.playerSettings.Remove(playerID);
+                }
+                DeathConfigurationData.playerSettings.Add(playerID, new DeathConfiguration(){ DeathChoiceLevel = selectedDeathChoice });
+                Player.m_localPlayer.AddUniqueKeyValue(DeathChoiceKey, selectedDeathChoice);
                 DeathConfigurationData.CheckAndSetPlayerDeathConfig();
                 DeathConfigurationData.WritePlayerChoices();
                 Hide();

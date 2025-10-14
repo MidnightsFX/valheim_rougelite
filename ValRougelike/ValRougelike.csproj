@@ -85,6 +85,7 @@
     <Compile Include="Death\OnDeathChanges.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="external\AlmanacClasses.cs" />
+    <Compile Include="external\WackMMO_API.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
     <Compile Include="Deathlink.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

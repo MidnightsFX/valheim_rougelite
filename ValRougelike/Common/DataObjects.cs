@@ -15,12 +15,21 @@ public class DataObjects
     public static IDeserializer yamldeserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
     public static ISerializer yamlserializer = new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).DisableAliases().ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults).Build();
 
+    public static readonly string DeathChoiceKey = "DL_DeathChoice";
     public enum ItemLossStyle
     {
         None,
         DestroyNonWeaponArmor,
         DeathlinkBased,
         DestroyAll
+    }
+
+    public enum ItemResults
+    {
+        EquipmentSaved,
+        EquipmentLost,
+        ItemSaved,
+        ItemLost,
     }
 
     public enum ItemSavedStyle

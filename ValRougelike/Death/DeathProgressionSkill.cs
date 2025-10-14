@@ -4,6 +4,7 @@ using Jotunn.Configs;
 using Jotunn.Managers;
 using UnityEngine;
 using Deathlink.Common;
+using Deathlink.external;
 
 namespace Deathlink.Death;
 
@@ -123,6 +124,11 @@ public static class DeathProgressionSkill
                     int almXP = Mathf.RoundToInt(curved_xp * ValConfig.AlmanacClassesXPGainScale.Value);
                     Logger.LogDebug($"Almanac XP Gain {almXP}");
                     AlmanacClasses.API.ClassesAPI.AddEXP(almXP);
+                }
+                if (Deathlink.WackyMMOLoaded) {
+                    int wackyXP = Mathf.RoundToInt(curved_xp * ValConfig.WackyMMOXPGainScale.Value);
+                    Logger.LogDebug($"WackyMMO XP Gain {wackyXP}");
+                    EpicMMOSystem_API.AddExp(wackyXP);
                 }
 
                 Logger.LogDebug($"DeathProgression skill bonus from survival (survive time: {__instance.m_timeSinceDeath}) {skillbonus} x {total_xp_from_actions} = {curved_xp}");

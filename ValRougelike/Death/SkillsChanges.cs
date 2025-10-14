@@ -3,6 +3,7 @@ using HarmonyLib;
 using Deathlink.Common;
 using static Skills;
 using UnityEngine;
+using Deathlink.external;
 
 namespace Deathlink.Death;
 
@@ -48,6 +49,14 @@ public static class SkillsChanges
                     int xploss = Mathf.RoundToInt(level * factor * 500f * ValConfig.AlmanacClassesXPLossScale.Value) * -1;
                     Logger.LogDebug($"Almanac (lvl {level}) XP Loss: {xploss}");
                     AlmanacClasses.API.ClassesAPI.AddEXP(xploss);
+                }
+            }
+            if (Deathlink.WackyMMOLoaded) {
+                if (ValConfig.EnableWackyMMOXPLossOnDeath.Value) {
+                    int level = EpicMMOSystem_API.GetLevel();
+                    int xploss = Mathf.RoundToInt(level * factor * 500f * ValConfig.WackyMMOXPLossScale.Value) * -1;
+                    Logger.LogDebug($"WackyMMO (lvl {level}) XP Loss: {xploss}");
+                    EpicMMOSystem_API.AddExp(xploss);
                 }
             }
 

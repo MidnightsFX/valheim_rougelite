@@ -1,8 +1,6 @@
 ﻿using Deathlink.Common;
 using HarmonyLib;
-using Jotunn.Managers;
 using System.Text;
-using UnityEngine;
 using static Deathlink.Common.DataObjects;
 
 namespace Deathlink.Death
@@ -15,24 +13,13 @@ namespace Deathlink.Death
         [HarmonyPatch(typeof(TextsDialog), nameof(TextsDialog.UpdateTextsList))]
         public static class TextsDialog_UpdateTextsList_Patch
         {
-            public static void Postfix(TextsDialog __instance)
-            {
-                var player = Player.m_localPlayer;
-                if (player == null)
-                    return;
-
-                AddDeathLinkExplanationPage(__instance, player);
+            public static void Postfix(TextsDialog __instance) {
+                AddDeathLinkExplanationPage(__instance);
             }
 
-            private static void AddDeathLinkExplanationPage(TextsDialog textsDialog, Player player)
+            private static void AddDeathLinkExplanationPage(TextsDialog textsDialog)
             {
-                long playerID = Player.m_localPlayer.GetPlayerID();
-                // No deathlink configured for this player
-                if (!DeathConfigurationData.playerSettings.ContainsKey(playerID)) {
-                    return;
-                }
-                string deathchoice = DeathConfigurationData.playerSettings[playerID].DeathChoiceLevel;
-                DeathChoiceLevel deathlinkPlayerSettings = DeathConfigurationData.DeathLevels[deathchoice];
+                DeathChoiceLevel deathlinkPlayerSettings = DeathConfigurationData.playerDeathConfiguration;
 
                 StringBuilder sb = new StringBuilder();
 

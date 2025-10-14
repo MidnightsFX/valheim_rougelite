@@ -2,6 +2,7 @@
 using BepInEx.Logging;
 using Deathlink.Common;
 using Deathlink.Death;
+using Deathlink.external;
 using HarmonyLib;
 using Jotunn.Entities;
 using Jotunn.Managers;
@@ -21,16 +22,18 @@ namespace Deathlink
     [NetworkCompatibility(CompatibilityLevel.ClientMustHaveMod, VersionStrictness.Minor)]
     [BepInDependency("Azumatt.AzuExtendedPlayerInventory", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("RustyMods.AlmanacClasses", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("WackyMole.EpicMMOSystem", BepInDependency.DependencyFlags.SoftDependency)]
     internal class Deathlink : BaseUnityPlugin
     {
         public const string PluginGUID = "MidnightsFX.Deathlink";
         public const string PluginName = "Deathlink";
-        public const string PluginVersion = "0.7.5";
+        public const string PluginVersion = "0.8.0";
 
         public ValConfig cfg;
         internal static AssetBundle EmbeddedResourceBundle;
         internal static bool AzuEPILoaded = false;
         internal static bool RustyAlmanacClassesLoaded = false;
+        internal static bool WackyMMOLoaded = false;
 
         // Use this class to add your own localization to the game
         // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
@@ -46,10 +49,20 @@ namespace Deathlink
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("Deathlink.AssetsEmbedded.deathless", typeof(Deathlink).Assembly);
             DeathProgressionSkill.SetupDeathSkill();
 
+
+            // API Checks for other mods
             if (AzuExtendedPlayerInventory.API.IsLoaded()) {
                 AzuEPILoaded = true;
             }
-
+            if (BepInExUtils.GetPlugins().Keys.Contains("WackyMole.EpicMMOSystem")) {
+                EpicMMOSystem_API.Init();
+                if (EpicMMOSystem_API.state == EpicMMOSystem_API.API_State.Ready) {
+                    WackyMMOLoaded = true;
+                    Logger.LogInfo("WackMMO API loaded.");
+                } else {
+                    Logger.LogInfo("WackMMO API installed but API not ready.");
+                }
+            }
             if (BepInExUtils.GetPlugins().Keys.Contains("RustyMods.AlmanacClasses")) {
                 RustyAlmanacClassesLoaded = true;
             } 
@@ -59,6 +72,8 @@ namespace Deathlink
             Logger.LogInfo("Death is not the end.");
             // To learn more about Jotunn's features, go to
             // https://valheim-modding.github.io/Jotunn/tutorials/overview.html
+
+            //MinimapManager.OnVanillaMapDataLoaded += DeathConfigurationData.CheckAndSetPlayerDeathConfig;
         }
 
         public static DeathChoiceLevel pcfg(){

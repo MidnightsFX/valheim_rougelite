@@ -1,3 +1,18 @@
+  **0.8.0**
+---
+```
+- Adds support for storing death configuration as a player private key, this is now the default method
+- Syncs player deathlink key on server join
+- Optionally falls back to yaml configuration if no key is found
+- Fixes a bug with AzuExtendedInventory integration where items might not be saved correctly
+- Fixes an issue with remote deathlink configuration not being applied if it was synced after the players preferences were loaded
+- Adds an integration to WackyMMO
+	- Allows WackyMMO XP loss on death
+	- Allows WackyMMO XP gain from deathlink progression
+	- Adds configuration to disable WackyMMO XP loss on death
+	- Adds configuration to tune XP loss/ XP gain rates
+```
+
   **0.7.5**
 ---
 ```

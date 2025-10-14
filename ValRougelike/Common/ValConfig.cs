@@ -19,10 +19,14 @@ public class ValConfig
     public static ConfigEntry<float> SkillGainOnResourceGathering;
     public static ConfigEntry<float> SkillGainOnBuilding;
     public static ConfigEntry<bool> ShowDeathMapMarker;
+    public static ConfigEntry<bool> UsePrivateKeysForDeathChoice;
     //public static ConfigEntry<bool> EffectRemovalOnDeath;
     public static ConfigEntry<bool> EnableAlmanacClassesXPLossOnDeath;
     public static ConfigEntry<float> AlmanacClassesXPLossScale;
     public static ConfigEntry<float> AlmanacClassesXPGainScale;
+    public static ConfigEntry<bool> EnableWackyMMOXPLossOnDeath;
+    public static ConfigEntry<float> WackyMMOXPLossScale;
+    public static ConfigEntry<float> WackyMMOXPGainScale;
 
     const string cfgFolder = "Deathlink";
     const string deathChoicesCfg = "DeathChoices.yaml";
@@ -76,9 +80,14 @@ public class ValConfig
 
         ShowDeathMapMarker = BindServerConfig("DeathTweaks", "ShowDeathMapMarker", true, "Whether or not a map marker is placed on your death location.");
 
+        UsePrivateKeysForDeathChoice = BindServerConfig("Config", "UsePrivateKeysForDeathChoice", true, "If true, death configuration is stored and checked as a private key on the player. Key value is synced when connecting to a server. False uses the yaml configuration flatfile.", advanced: true);
+
         EnableAlmanacClassesXPLossOnDeath = BindServerConfig("ModIntegrations", "EnableAlmanacClassesXPLossOnDeath", true, "If true, XP loss also happens for characters Alamanc Class level.");
         AlmanacClassesXPLossScale = BindServerConfig("ModIntegrations", "AlmanacClassesXPLossScale", 1.0f, "How strong the XP loss for Almanac is, lower = less XP loss, higher = more XP loss.");
         AlmanacClassesXPGainScale = BindServerConfig("ModIntegrations", "AlmanacClassesXPGainScale", 20f, "How much Almanac Classes XP is gained based on Deathlink actions. This is gained at an inregular interval based on deathlink skill gains.");
+        EnableWackyMMOXPLossOnDeath = BindServerConfig("ModIntegrations", "EnableWackyMMOXPLossOnDeath", true, "If true, XP loss also happens for characters WackyMMO level.");
+        WackyMMOXPLossScale = BindServerConfig("ModIntegrations", "WackyMMOXPLossScale", 1.0f, "How strong the XP loss for WackyMMO is, lower = less XP loss, higher = more XP loss.");
+        WackyMMOXPGainScale = BindServerConfig("ModIntegrations", "WackyMMOXPGainScale", 1.0f, "How strong the XP gain for WackyMMO is, lower = less XP gain, higher = more XP gain.");
 
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
@@ -162,7 +171,7 @@ public class ValConfig
     {
         if (SynchronizationManager.Instance.PlayerIsAdmin == false)
         {
-            Logger.LogInfo("Player is not an admin, and not allowed to change local configuration. Ignoring.");
+            Logger.LogDebug("Player is not an admin, and not allowed to change local configuration. Ignoring.");
             return;
         }
         if (!File.Exists(e.FullPath)) { return; }
@@ -189,6 +198,7 @@ public class ValConfig
         var yaml = package.ReadString();
         DeathConfigurationData.UpdateDeathLevelsConfig(yaml);
         DeathConfigurationData.WriteDeathChoices();
+        DeathConfigurationData.CheckAndSetPlayerDeathConfig();
         yield return null;
     }
 
@@ -210,7 +220,6 @@ public class ValConfig
         // only updates in memory
         var yaml = package.ReadString();
         DeathConfigurationData.UpdatePlayerConfigSettings(yaml);
-        DeathConfigurationData.CheckAndSetPlayerDeathConfig();
         yield return null;
     }
 

@@ -117,19 +117,52 @@ namespace Deathlink.Common
             catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the player choice configs, defaults will be used. Exception: {e}"); }
         }
 
-        public static void CheckAndSetPlayerDeathConfig() {
-            if (Player.m_localPlayer == null) {
-                //Logger.LogWarning("Local player not defined, skipping setup.");
-                return;
+        [HarmonyPatch(typeof(Player))]
+        public static class SetupPlayerDeathlink
+        {
+            [HarmonyPostfix]
+            [HarmonyPatch(nameof(Player.OnSpawned))]
+            static void Postfix(Player __instance)
+            {
+                CheckAndSetPlayerDeathConfig();
             }
-            
-            long playerID = Player.m_localPlayer.GetPlayerID();
-            //Logger.LogWarning($"Setting up Deathlink player configuration with id {playerID}");
-            CheckAndSetPlayerDeathConfig(playerID);
         }
 
-        public static void CheckAndSetPlayerDeathConfig(long playerID) {
-            Logger.LogDebug($"Checking stored configurations for {playerID} {string.Join(",",playerSettings.Keys)}");
+        public static void CheckAndSetPlayerDeathConfig() {
+            Player player = Player.m_localPlayer;
+            if (ValConfig.UsePrivateKeysForDeathChoice.Value && player != null) {
+                Logger.LogDebug($"Checking private keys configurations for Deathlink");
+                if (player.PlayerHasUniqueKey(DeathChoiceKey)) {
+                    player.TryGetUniqueKeyValue(DeathChoiceKey, out string selectedDeathConfig);
+                    if (DeathLevels.ContainsKey(selectedDeathConfig)) {
+                        Logger.LogDebug($"Player deathlink configurations set {selectedDeathConfig}");
+                        playerDeathConfiguration = DeathLevels[selectedDeathConfig];
+                    } else {
+                        Logger.LogDebug("Player preference setting is not an available config, removing player choice.");
+                        player.PlayerRemoveUniqueKey(DeathChoiceKey);
+                        // restart the check
+                        CheckAndSetPlayerDeathConfig();
+                    }
+                } else {
+                    // Fallback check for yaml
+                    Logger.LogDebug("No private key set for deathlink configuration, checking yaml config fallback");
+                    CheckYamlConfig();
+                }
+            } else {
+                CheckYamlConfig();
+            }
+        }
+
+        internal static void CheckYamlConfig() {
+            if (Player.m_localPlayer == null) {
+                Logger.LogWarning("Local player not defined, skipping setup.");
+                Logger.LogDebug($"Player preference setting is not an available config, using fallback {DeathLevels.First().Key}");
+                playerDeathConfiguration = DeathLevels.First().Value;
+                return;
+            }
+            long playerID = Player.m_localPlayer.GetPlayerID();
+            Logger.LogDebug($"Setting up Deathlink player configuration with id {playerID}");
+            Logger.LogDebug($"Checking stored configurations for {playerID} {string.Join(",", playerSettings.Keys)}");
             if (playerSettings.ContainsKey(playerID)) {
                 string selectedDeathConfig = playerSettings[playerID].DeathChoiceLevel;
                 if (DeathLevels.ContainsKey(selectedDeathConfig)) {
@@ -139,16 +172,6 @@ namespace Deathlink.Common
                     Logger.LogDebug("Player preference setting is not an available config, using fallback");
                     playerDeathConfiguration = DeathLevels.First().Value;
                 }
-            }
-        }
-
-        [HarmonyPatch(typeof(Player))]
-        public static class SetupDeathLinkPlayerSpecificConfigPatch
-        {
-            [HarmonyPostfix]
-            [HarmonyPatch(nameof(Player.SetPlayerID))]
-            static void Postfix() {
-                CheckAndSetPlayerDeathConfig();
             }
         }
 

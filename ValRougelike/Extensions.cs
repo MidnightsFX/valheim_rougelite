@@ -20,7 +20,8 @@ public static class Extensions
             ItemDrop.ItemData.ItemType.OneHandedWeapon,
             ItemDrop.ItemData.ItemType.TwoHandedWeapon,
             ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft,
-            ItemDrop.ItemData.ItemType.Attach_Atgeir
+            ItemDrop.ItemData.ItemType.Attach_Atgeir,
+            ItemDrop.ItemData.ItemType.Trinket
         };
     public static List<ItemDrop.ItemData> GetEquipment(this List<ItemDrop.ItemData> list)
     {
