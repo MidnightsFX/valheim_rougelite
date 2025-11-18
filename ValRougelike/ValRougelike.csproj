@@ -71,6 +71,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\TerminalCommands.cs" />
     <Compile Include="Common\DataObjects.cs" />
     <Compile Include="Common\DeathConfigurationData.cs" />
     <Compile Include="Common\Logger.cs" />

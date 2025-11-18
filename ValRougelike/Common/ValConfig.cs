@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using Jotunn;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using System;
@@ -36,6 +37,7 @@ public class ValConfig
 
     private static CustomRPC deathChoiceRPC;
     private static CustomRPC characterSettingRPC;
+    public static CustomRPC resetChoiceRPC;
 
     public static ConfigEntry<float> SkillProgressUpdateCheckInterval;
     
@@ -60,6 +62,7 @@ public class ValConfig
     {
         deathChoiceRPC = NetworkManager.Instance.AddRPC("DEATHLK_CH", OnServerRecieveConfigs, OnClientReceiveDeathChoiceConfigs);
         characterSettingRPC = NetworkManager.Instance.AddRPC("DEATHLK_PSET", OnServerRecievePlayerSettingsConfig, OnClientReceivePlayerSettingsConfigs);
+        resetChoiceRPC = NetworkManager.Instance.AddRPC("DEATHLK_RESET", OnServerRecieveResetRPC, OnClientRecieveResetRPC);
 
         SynchronizationManager.Instance.AddInitialSynchronization(deathChoiceRPC, SendDeathChoices);
         SynchronizationManager.Instance.AddInitialSynchronization(characterSettingRPC, SendCharSettings);
@@ -212,6 +215,31 @@ public class ValConfig
         var yaml = package.ReadString();
         DeathConfigurationData.UpdatePlayerConfigSettings(yaml);
         DeathConfigurationData.WritePlayerChoices();
+        yield return null;
+    }
+
+    private static IEnumerator OnServerRecieveResetRPC(long sender, ZPackage package)
+    {
+        long playerID = package.ReadLong();
+        if (DeathConfigurationData.playerSettings.ContainsKey(playerID)) {
+            DeathConfigurationData.playerSettings.Remove(playerID);
+        }
+        DeathConfigurationData.WritePlayerChoices();
+
+        // If the server request is being handled by a non-dedicated instance AND the request is targeting the local player
+        if (!ZNet.instance.IsServerInstance() && Player.m_localPlayer.m_nview.GetZDO().GetLong(ZDOVars.s_playerID, 0L) == playerID) {
+            Logger.LogInfo("Reset requested for local players death choice.");
+            Player.m_localPlayer.PlayerRemoveUniqueKey(DataObjects.DeathChoiceKey);
+        }
+
+        yield return null;
+    }
+
+    private static IEnumerator OnClientRecieveResetRPC(long sender, ZPackage package)
+    {
+        Logger.LogInfo("Reset requested for local players death choice.");
+        Player.m_localPlayer.PlayerRemoveUniqueKey(DataObjects.DeathChoiceKey);
+
         yield return null;
     }
 

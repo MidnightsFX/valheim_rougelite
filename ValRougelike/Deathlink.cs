@@ -27,7 +27,7 @@ namespace Deathlink
     {
         public const string PluginGUID = "MidnightsFX.Deathlink";
         public const string PluginName = "Deathlink";
-        public const string PluginVersion = "0.8.0";
+        public const string PluginVersion = "0.8.1";
 
         public ValConfig cfg;
         internal static AssetBundle EmbeddedResourceBundle;
@@ -69,6 +69,7 @@ namespace Deathlink
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
             DeathConfigurationData.Init();
+            TerminalCommands.AddCommands();
             Logger.LogInfo("Death is not the end.");
             // To learn more about Jotunn's features, go to
             // https://valheim-modding.github.io/Jotunn/tutorials/overview.html

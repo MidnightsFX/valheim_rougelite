@@ -150,6 +150,16 @@ Death loot configuration provides a way to gain additional items on kills, speci
       - Kills
 ```
 
+### Resetting a players choice
+You or someone you play with has made a terrible choice, they thought they were so hardcore and now they can't stay alive.
+
+Well! There is a solution! As an admin you can reset yours or other players death choices, ensure that you have the console enabled by setting your launch paramters in your mod manager to include `-console`
+
+In game run the command `dl-reset-choice [playername]` eg: `dl-reset-choice Midnight` or `dl-reset-choice 91231230123`. This command will clear the players choice from the server, and remove their choice from their character.
+They should open their inventory again to select a new choice.
+
+If you are having trouble matching an existing player in the game, be sure to turn logging on for Deathlink, and validate the steam ID or player name you are using matches a player in the game.
+
 
 ### Localization
 External localization can be configured at `BepInEx\config\Deathlink\localizations`. This folder and the default localization will be generated and added the first time this mod runs.

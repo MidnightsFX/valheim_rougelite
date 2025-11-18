@@ -1,3 +1,11 @@
+  **0.8.1**
+---
+```
+- Adds a Deathlink choice reset command `dl-reset-choice`
+	- Can be used locally or on a server (only by admins)
+	- Requires that the target player is online
+```
+
   **0.8.0**
 ---
 ```
