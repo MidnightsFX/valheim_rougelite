@@ -6,6 +6,7 @@ using Jotunn.Managers;
 using System;
 using System.Collections;
 using System.IO;
+using static ZNet;
 
 namespace Deathlink.Common;
 
@@ -220,16 +221,42 @@ public class ValConfig
 
     private static IEnumerator OnServerRecieveResetRPC(long sender, ZPackage package)
     {
-        long playerID = package.ReadLong();
-        if (DeathConfigurationData.playerSettings.ContainsKey(playerID)) {
-            DeathConfigurationData.playerSettings.Remove(playerID);
+        string platformID = package.ReadString();
+
+        // Find the target charID, peer UID, and the local player's platform ID in one pass
+        long charID = 0L;
+        long targetPeerUID = 0L;
+        string localPlayerPlatformId = "";
+        foreach (ZNet.PlayerInfo player in ZNet.instance.GetPlayerList()) {
+            long pCharID = player.m_characterID.ID;
+            if (pCharID == 0L) {
+                ZDO zDO = ZDOMan.instance.GetZDO(player.m_characterID);
+                pCharID = zDO.GetLong(ZDOVars.s_playerID, 0L);
+            }
+            if (player.m_userInfo.m_id.m_userID == platformID) {
+                charID = pCharID;
+                if (DeathConfigurationData.playerSettings.ContainsKey(charID)) {
+                    DeathConfigurationData.playerSettings.Remove(charID);
+                }
+                ZNetPeer peer = ZNet.instance.GetPeerByPlayerName(player.m_userInfo.m_displayName);
+                if (peer != null) {
+                    targetPeerUID = peer.m_uid;
+                }
+            }
+            if (Player.m_localPlayer != null && player.m_characterID == Player.m_localPlayer.m_nview.GetZDO().m_uid) {
+                localPlayerPlatformId = player.m_userInfo.m_id.m_userID;
+            }
         }
         DeathConfigurationData.WritePlayerChoices();
 
-        // If the server request is being handled by a non-dedicated instance AND the request is targeting the local player
-        if (!ZNet.instance.IsServerInstance() && Player.m_localPlayer.m_nview.GetZDO().GetLong(ZDOVars.s_playerID, 0L) == playerID) {
-            Logger.LogInfo("Reset requested for local players death choice.");
+        Logger.LogDebug($"Reset requested for platform ID {platformID} (charID: {charID}, peerUID: {targetPeerUID}), local platform ID: {localPlayerPlatformId}.");
+
+        if (Player.m_localPlayer != null && localPlayerPlatformId == platformID) {
+            Logger.LogInfo("Reset requested for local player's death choice.");
             Player.m_localPlayer.PlayerRemoveUniqueKey(DataObjects.DeathChoiceKey);
+        } else {
+            ZPackage fwdPackage = new ZPackage();
+            resetChoiceRPC.SendPackage(targetPeerUID, fwdPackage);
         }
 
         yield return null;

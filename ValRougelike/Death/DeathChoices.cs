@@ -89,7 +89,7 @@ namespace Deathlink.Death
                     Logger.LogWarning("No death type selected");
                     return;
                 }
-                //Logger.LogDebug($"Player selected death type {selectedDeathChoice}");
+                Logger.LogDebug($"Player selected death type {selectedDeathChoice}");
                 long playerID = Player.m_localPlayer.GetPlayerID();
                 if (DeathConfigurationData.playerSettings.ContainsKey(playerID)) {
                     DeathConfigurationData.playerSettings.Remove(playerID);
@@ -105,7 +105,7 @@ namespace Deathlink.Death
             private void SetChoiceList()
             {
                 difficultyToggles.Clear();
-                int y_value = -50;
+                int y_value = -75;
                 //Logger.LogDebug($"Setting up {DeathChoices.Count} death styles.");
                 foreach (var entry in DeathConfigurationData.DeathLevels) {
                     var newDeathChoice = GameObject.Instantiate(ChoicesContainer, ChoicesContent.transform);
@@ -132,7 +132,7 @@ namespace Deathlink.Death
                     });
                     //Logger.LogDebug("Created onclick");
                     newDeathChoice.SetActive(true);
-                    newDeathChoice.transform.localPosition = new Vector3() { x = 260, y = y_value };
+                    newDeathChoice.transform.localPosition = new Vector3() { x = 5, y = y_value };
                     difficultyToggles.Add(toggle);
                     y_value -= 50;
                 }
@@ -144,7 +144,7 @@ namespace Deathlink.Death
                     Logger.LogWarning("GUIManager not setup, skipping static object creation.");
                     return;
                 }
-
+                Logger.LogDebug("Creating static UI");
                 // Create the panel object
                 DeathChoicePanel = GUIManager.Instance.CreateWoodpanel(
                     parent: GUIManager.CustomGUIFront.transform,
@@ -203,7 +203,7 @@ namespace Deathlink.Death
                 Button bclose = manualCloseButton.GetComponent<Button>();
                 bclose.interactable = true;
                 bclose.onClick.AddListener(Hide);
-                manualCloseButton.SetActive(false);
+                manualCloseButton.SetActive(true);
 
                 var deathpenaltyTitle = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$death_penalty_header"),
@@ -355,21 +355,27 @@ namespace Deathlink.Death
                     width: 200f,
                     height: 80f);
                 Button bchoice = selectChoiceButton.GetComponent<Button>();
-                bchoice.interactable = true;
+                //bchoice.interactable = true;
                 bchoice.onClick.AddListener(MakePlayerDeathSelection);
 
                 Logger.LogDebug("Setting up scroll entry");
                 // Scroll area
-                ChoicesScrollView = GUIManager.Instance.CreateScrollView(DeathChoicePanel.transform, false, true, 10f, 10f, GUIManager.Instance.ValheimScrollbarHandleColorBlock, Color.grey, 200f, 400f);
+                ChoicesScrollView = GUIManager.Instance.CreateScrollView(DeathChoicePanel.transform, false, true, 10f, 10f, GUIManager.Instance.ValheimScrollbarHandleColorBlock, Color.grey, 250f, 400f);
                 ChoicesScrollView.transform.localPosition = new Vector2 { x = -260, y = -30 };
                 ChoicesContent = ChoicesScrollView.GetComponentInChildren<ContentSizeFitter>().gameObject;
+                ChoicesScrollView.GetComponentInChildren<ScrollRect>().scrollSensitivity = 200;
                 choiceGroup = ChoicesContent.AddComponent<ToggleGroup>();
 
                 Logger.LogDebug("Setting up death choice template entry");
 
-                ChoicesContainer = new GameObject("DeathChoice");
-                ChoicesContainer.transform.SetParent(DeathChoicePanel.transform);
-                ChoicesContainer.transform.position = DeathChoicePanel.transform.position;
+                ChoicesContainer = Object.Instantiate(new GameObject("DeathChoice"), DeathChoicePanel.transform);
+                RectTransform rt = ChoicesContainer.AddComponent<RectTransform>();
+                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 100);
+                rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
+                rt.position = new Vector3(0, 0);
+                //ChoicesContainer.transform.position = DeathChoicePanel.transform.position;
+                LayoutElement le = ChoicesContainer.AddComponent<LayoutElement>();
+                le.minHeight = 50;
                 ChoicesContainer.SetActive(false);
 
                 var toggleGo = GUIManager.Instance.CreateToggle(
@@ -377,7 +383,7 @@ namespace Deathlink.Death
                     width: 40f,
                     height: 40f
                     );
-                toggleGo.transform.localPosition = new Vector2(-220f, 0f);
+                toggleGo.transform.localPosition = new Vector2(10f, 0f);
                 toggleGo.name = "selecter";
                 toggleGo.transform.Find("Label").gameObject.SetActive(false);
                 toggleGo.GetComponent<Toggle>().isOn = false;
@@ -387,7 +393,7 @@ namespace Deathlink.Death
                     parent: ChoicesContainer.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(-20f, 0f),
+                    position: new Vector2(200f, 0f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 20,
                     color: GUIManager.Instance.ValheimYellow,

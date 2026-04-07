@@ -1,3 +1,13 @@
+  **0.8.2**
+---
+```
+- Fixes scroll visibility of death choices
+- Adds more failsafes for invalid death choice configurations
+- Improves deahtlink reset command matching to player names or ids
+- Adds backpack integration to avoid deathlink destroying player backpacks (just items in the pack)
+- Adds missing wood types to the default list of wood harvestables
+```
+
   **0.8.1**
 ---
 ```

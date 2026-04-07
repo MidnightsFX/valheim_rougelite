@@ -73,7 +73,7 @@ namespace Deathlink.Common
                         { "SmallHealthPotion", new DeathLootModifier() { chance = 0.01f, prefab = "MeadHealthMinor", bonusActions = new List<ResourceGainTypes>() { ResourceGainTypes.Kills } } }
                     },
                     ResourceModifiers = new Dictionary<string, DeathResourceModifier> {
-                        { "Wood", new DeathResourceModifier() { prefabs = new List<string>() { "Wood", "FineWood", "RoundLog", "YggdrasilWood", "Blackwood" }, bonusModifer = 2.0f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } },
+                        { "Wood", new DeathResourceModifier() { prefabs = new List<string>() { "Wood", "FineWood", "RoundLog", "YggdrasilWood", "Blackwood", "ElderBark" }, bonusModifer = 2.0f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } },
                         { "Stone", new DeathResourceModifier() { prefabs = new List<string>() { "Flint", "Stone", "BlackMarble", "Grausten" }, bonusModifer = 2.0f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } },
                         { "Ore", new DeathResourceModifier() { prefabs = new List<string>() { "CopperOre", "TinOre", "IronScrap", "SilverOre", "BlackMetalScrap", "CopperScrap", "FlametalOreNew" }, bonusModifer = 2.0f, bonusActions = new List<ResourceGainTypes>(){ ResourceGainTypes.Harvesting } } }
                     },
@@ -156,6 +156,7 @@ namespace Deathlink.Common
         internal static void CheckYamlConfig() {
             if (Player.m_localPlayer == null) {
                 Logger.LogWarning("Local player not defined, skipping setup.");
+                DeathLevels = defaultDeathLevels;
                 Logger.LogDebug($"Player preference setting is not an available config, using fallback {DeathLevels.First().Key}");
                 playerDeathConfiguration = DeathLevels.First().Value;
                 return;

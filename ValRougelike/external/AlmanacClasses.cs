@@ -7,9 +7,11 @@ public static class ClassesAPI
 {
     // Add this section to your solution
     // It will give you methods that references my methods in the class API below
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
     private static readonly MethodInfo? API_AddExperience;
     private static readonly MethodInfo? API_GetLevel;
     private static readonly MethodInfo? API_GetCharacteristic;
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
     public static void AddEXP(int amount)
     {
         API_AddExperience?.Invoke(null, new object[] { amount });

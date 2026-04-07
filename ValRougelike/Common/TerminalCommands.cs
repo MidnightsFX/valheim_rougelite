@@ -23,7 +23,7 @@ namespace Deathlink.Common
             public override string Name => "DL-RESET-CHOICE";
 
             public override bool IsNetwork => true;
-            public override string Help => "Format: [playerID] resets the deathlink choice for the selected player and sends the updated config.";
+            public override string Help => "Format: [steamID|playerName] resets the deathlink choice for the target player. Accepts a platform Steam ID or a case-insensitive player name.";
 
             public override void Run(string[] args)
             {
@@ -33,33 +33,35 @@ namespace Deathlink.Common
                 }
 
                 if (args.Length < 1) {
-                    Logger.LogInfo("Player ID required");
+                    Logger.LogInfo("Player Steam ID or name required");
+                    return;
                 }
-                long.TryParse(args[0], out long targetPlayerID);
+
+                string inputArg = args[0];
                 bool matched = false;
 
                 foreach (ZNet.PlayerInfo player in ZNet.instance.GetPlayerList()) {
-                    ZDO zDO = ZDOMan.instance.GetZDO(player.m_characterID);
-                    long PlayerID = 0;
-                    if (zDO != null) {
-                        PlayerID = zDO.GetLong(ZDOVars.s_playerID, 0L);
-                    }
-                    Logger.LogDebug($"Checking Player {player.m_userInfo.m_displayName} == {args[0]} || {PlayerID} == {targetPlayerID}");
-                    if (PlayerID == targetPlayerID || player.m_userInfo.m_displayName == args[0])
-                    {
-                        Logger.LogInfo($"Matched player {PlayerID}");
+                    string platformUserID = player.m_userInfo.m_id.m_userID.ToString();
+                    string displayName = player.m_userInfo.m_displayName;
+
+                    bool idMatch = platformUserID == inputArg;
+                    bool nameMatch = string.Equals(displayName, inputArg, StringComparison.OrdinalIgnoreCase);
+
+                    Logger.LogDebug($"Checking Player {displayName} (platformID: {platformUserID}) against '{inputArg}'");
+
+                    if (idMatch || nameMatch) {
+                        Logger.LogInfo($"Matched player {displayName} (platformID: {platformUserID})");
                         ZPackage package = new ZPackage();
-                        package.Write(PlayerID);
-                        ValConfig.resetChoiceRPC.SendPackage(PlayerID, package);
+                        package.Write(platformUserID);
                         ValConfig.resetChoiceRPC.SendPackage(ZRoutedRpc.instance.GetServerPeerID(), package);
                         matched = true;
                         break;
                     }
                 }
-                if (matched == false) {
+                if (!matched) {
                     Logger.LogInfo("Player could not be found, are they online?");
                 }
-                
+
             }
         }
     }
