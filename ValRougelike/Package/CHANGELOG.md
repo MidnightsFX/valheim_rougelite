@@ -1,3 +1,10 @@
+  **0.8.3**
+---
+```
+- Removed Repacker
+- Improves server relay for reset-choice command
+```
+
   **0.8.2**
 ---
 ```

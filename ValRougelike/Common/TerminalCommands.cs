@@ -50,10 +50,18 @@ namespace Deathlink.Common
                     Logger.LogDebug($"Checking Player {displayName} (platformID: {platformUserID}) against '{inputArg}'");
 
                     if (idMatch || nameMatch) {
-                        Logger.LogInfo($"Matched player {displayName} (platformID: {platformUserID})");
-                        ZPackage package = new ZPackage();
-                        package.Write(platformUserID);
-                        ValConfig.resetChoiceRPC.SendPackage(ZRoutedRpc.instance.GetServerPeerID(), package);
+                        ZPackage resetpkg = new ZPackage();
+                        resetpkg.Write(platformUserID);
+                        Logger.LogDebug("Requesting server reset of player saved Deathlink choice");
+                        ValConfig.resetChoiceRPC.SendPackage(ZRoutedRpc.instance.GetServerPeerID(), resetpkg);
+                        Logger.LogDebug($"Checking for {player.m_name} peer");
+                        ZNetPeer peer = ZNet.instance.GetPeerByPlayerName(player.m_name);
+                        if (peer == null) {
+                            Logger.LogWarning($"Player {displayName} found in player list but has no active peer.");
+                            break;
+                        }
+                        ValConfig.resetChoiceRPC.SendPackage(peer.m_uid, resetpkg);
+                        Logger.LogInfo($"Matched player {player.m_name}|{displayName} (platformID: {platformUserID}, peerUID: {peer.m_uid})");
                         matched = true;
                         break;
                     }
