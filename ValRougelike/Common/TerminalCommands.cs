@@ -38,38 +38,25 @@ namespace Deathlink.Common
                 }
 
                 string inputArg = args[0];
-                bool matched = false;
 
                 foreach (ZNet.PlayerInfo player in ZNet.instance.GetPlayerList()) {
                     string platformUserID = player.m_userInfo.m_id.m_userID.ToString();
                     string displayName = player.m_userInfo.m_displayName;
 
                     bool idMatch = platformUserID == inputArg;
-                    bool nameMatch = string.Equals(displayName, inputArg, StringComparison.OrdinalIgnoreCase);
+                    bool accountNameMatch = string.Equals(displayName, inputArg, StringComparison.OrdinalIgnoreCase);
+                    bool playerNameMatch = string.Equals(player.m_name, inputArg, StringComparison.OrdinalIgnoreCase);
 
-                    Logger.LogDebug($"Checking Player {displayName} (platformID: {platformUserID}) against '{inputArg}'");
+                    Logger.LogDebug($"Checking Player {displayName} (platformID: {platformUserID}, playerName: {player.m_name}) against '{inputArg}'");
 
-                    if (idMatch || nameMatch) {
+                    if (idMatch || accountNameMatch || playerNameMatch) {
+                        Logger.LogInfo($"Matched player {displayName} (platformID: {platformUserID}) for reset command.");
                         ZPackage resetpkg = new ZPackage();
                         resetpkg.Write(platformUserID);
                         Logger.LogDebug("Requesting server reset of player saved Deathlink choice");
                         ValConfig.resetChoiceRPC.SendPackage(ZRoutedRpc.instance.GetServerPeerID(), resetpkg);
-                        Logger.LogDebug($"Checking for {player.m_name} peer");
-                        ZNetPeer peer = ZNet.instance.GetPeerByPlayerName(player.m_name);
-                        if (peer == null) {
-                            Logger.LogWarning($"Player {displayName} found in player list but has no active peer.");
-                            break;
-                        }
-                        ValConfig.resetChoiceRPC.SendPackage(peer.m_uid, resetpkg);
-                        Logger.LogInfo($"Matched player {player.m_name}|{displayName} (platformID: {platformUserID}, peerUID: {peer.m_uid})");
-                        matched = true;
-                        break;
                     }
                 }
-                if (!matched) {
-                    Logger.LogInfo("Player could not be found, are they online?");
-                }
-
             }
         }
     }

@@ -222,42 +222,50 @@ public class ValConfig
     private static IEnumerator OnServerRecieveResetRPC(long sender, ZPackage package)
     {
         string platformID = package.ReadString();
-
+        Logger.LogInfo($"Received reset request for platform ID {platformID} from sender {sender}.");
         // Find the target charID, peer UID, and the local player's platform ID in one pass
         long charID = 0L;
         long targetPeerUID = 0L;
         string localPlayerPlatformId = "";
         foreach (ZNet.PlayerInfo player in ZNet.instance.GetPlayerList()) {
+            Logger.LogInfo($"Checking player {player.m_userInfo.m_displayName} with platform ID {player.m_userInfo.m_id.m_userID} and character ID {player.m_characterID.ID} | requested: {platformID}");
             long pCharID = player.m_characterID.ID;
             if (pCharID == 0L) {
                 ZDO zDO = ZDOMan.instance.GetZDO(player.m_characterID);
                 pCharID = zDO.GetLong(ZDOVars.s_playerID, 0L);
             }
             if (player.m_userInfo.m_id.m_userID == platformID) {
+                Logger.LogInfo($"Match found for player {player.m_userInfo.m_displayName} with platform ID {platformID} and character ID {pCharID}.");
                 charID = pCharID;
                 if (DeathConfigurationData.playerSettings.ContainsKey(charID)) {
+                    Logger.LogInfo($"Removing stored death configuration for character ID {charID}.");
                     DeathConfigurationData.playerSettings.Remove(charID);
                 }
-                ZNetPeer peer = ZNet.instance.GetPeerByPlayerName(player.m_userInfo.m_displayName);
-                if (peer != null) {
-                    targetPeerUID = peer.m_uid;
+                foreach(ZNetPeer peer in ZNet.instance.GetPeers()) {
+                    if (peer.m_socket != null && peer.m_socket.GetHostName() == platformID) {
+                        Logger.LogInfo($"Match found for peer {peer.m_playerName} with UID {peer.m_uid} and platform ID {platformID}. Setting targetPeerUID for reset RPC.");
+                        targetPeerUID = peer.m_uid;
+                        break;
+                    }
                 }
             }
-            if (Player.m_localPlayer != null && player.m_characterID == Player.m_localPlayer.m_nview.GetZDO().m_uid) {
-                localPlayerPlatformId = player.m_userInfo.m_id.m_userID;
+
+            try {
+                // This is only for handling hosted local server resets
+                if (Player.m_localPlayer != null && player.m_characterID == Player.m_localPlayer.m_nview.GetZDO().m_uid) {
+                    localPlayerPlatformId = player.m_userInfo.m_id.m_userID;
+                }
+            } catch {
+                Logger.LogWarning($"Failed to get platform ID for player {player.m_userInfo.m_displayName} with character ID {player.m_characterID.ID}. This may cause issues with resetting death choices for the local player.");
             }
         }
         DeathConfigurationData.WritePlayerChoices();
 
-        Logger.LogDebug($"Reset requested for platform ID {platformID} (charID: {charID}, peerUID: {targetPeerUID}), local platform ID: {localPlayerPlatformId}.");
+        Logger.LogInfo($"Reset requested for platform ID {platformID} (charID: {charID}, peerUID: {targetPeerUID}), local platform ID: {localPlayerPlatformId}.");
 
-        if (Player.m_localPlayer != null && localPlayerPlatformId == platformID) {
-            Logger.LogInfo("Reset requested for local player's death choice.");
-            Player.m_localPlayer.PlayerRemoveUniqueKey(DataObjects.DeathChoiceKey);
-        } else {
-            ZPackage fwdPackage = new ZPackage();
-            resetChoiceRPC.SendPackage(targetPeerUID, fwdPackage);
-        }
+        ZPackage fwdPackage = new ZPackage();
+        fwdPackage.Write(platformID);
+        resetChoiceRPC.SendPackage(targetPeerUID, fwdPackage);
 
         yield return null;
     }

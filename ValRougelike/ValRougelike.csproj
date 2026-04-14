@@ -84,11 +84,6 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="external\AlmanacClasses.cs" />
     <Compile Include="external\AzuExtendedInventoryAPI\API.cs" />
-    <Compile Include="external\AzuExtendedInventoryAPI\AzuEPI\API.cs" />
-    <Compile Include="external\AzuExtendedInventoryAPI\AzuEPI\SlotDescriptor.cs" />
-    <Compile Include="external\AzuExtendedInventoryAPI\AzuEPI\SlotInfo.cs" />
-    <Compile Include="external\AzuExtendedInventoryAPI\AzuEPI\SlotSnapshot.cs" />
-    <Compile Include="external\AzuExtendedInventoryAPI\Model.cs" />
     <Compile Include="external\AzuExtendedInventoryAPI\SlotInfo.cs" />
     <Compile Include="external\Backpacks_API.cs" />
     <Compile Include="external\WackMMO_API.cs" />

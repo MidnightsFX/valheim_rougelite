@@ -14,7 +14,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using static Deathlink.Common.DataObjects;
-using AzuExtendedPlayerInventory;
 
 namespace Deathlink
 {
@@ -28,7 +27,7 @@ namespace Deathlink
     {
         public const string PluginGUID = "MidnightsFX.Deathlink";
         public const string PluginName = "Deathlink";
-        public const string PluginVersion = "0.8.3";
+        public const string PluginVersion = "0.8.5";
 
         public ValConfig cfg;
         internal static AssetBundle EmbeddedResourceBundle;

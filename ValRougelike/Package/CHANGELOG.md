@@ -1,3 +1,18 @@
+  **0.8.5**
+---
+```
+- Improve dl-reset-choice now supports:
+	- Matching player name
+	- Player platform account name
+	- Player platform ID
+```
+
+  **0.8.4**
+---
+```
+- Fixes AzuExtendedInventory integration
+```
+
   **0.8.3**
 ---
 ```
