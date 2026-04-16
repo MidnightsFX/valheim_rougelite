@@ -1,3 +1,9 @@
+  **0.8.6**
+---
+```
+- command support for RCON by tristan
+```
+
   **0.8.5**
 ---
 ```

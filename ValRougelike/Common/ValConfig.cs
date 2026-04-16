@@ -229,6 +229,10 @@ public class ValConfig
         string localPlayerPlatformId = "";
         foreach (ZNet.PlayerInfo player in ZNet.instance.GetPlayerList()) {
             Logger.LogInfo($"Checking player {player.m_userInfo.m_displayName} with platform ID {player.m_userInfo.m_id.m_userID} and character ID {player.m_characterID.ID} | requested: {platformID}");
+            if (player.m_characterID.ID == 0) {
+                Logger.LogWarning($"Player {player.m_userInfo.m_displayName} has an invalid character ID of 0. This player is invalid and will be skipped.");
+                continue;
+            }
             long pCharID = player.m_characterID.ID;
             if (pCharID == 0L) {
                 ZDO zDO = ZDOMan.instance.GetZDO(player.m_characterID);
