@@ -202,7 +202,6 @@ public class ValConfig
         var yaml = package.ReadString();
         DeathConfigurationData.UpdateDeathLevelsConfig(yaml);
         DeathConfigurationData.WriteDeathChoices();
-        DeathConfigurationData.CheckAndSetPlayerDeathConfig();
         yield return null;
     }
 

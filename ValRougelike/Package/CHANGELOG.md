@@ -1,3 +1,9 @@
+  **0.8.7**
+---
+```
+- Improves fallback when loading player profile data
+```
+
   **0.8.6**
 ---
 ```

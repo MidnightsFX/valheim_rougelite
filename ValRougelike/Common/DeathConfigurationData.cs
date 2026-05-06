@@ -107,30 +107,29 @@ namespace Deathlink.Common
         internal static void Init() {
             try {
                 UpdateDeathLevelsConfig(File.ReadAllText(ValConfig.deathChoicesPath));
+            } catch (Exception e) {
+                Jotunn.Logger.LogWarning($"There was an error updating the Death choice Level values, defaults will be used. Exception: {e}");
             }
-            catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the Death choice Level values, defaults will be used. Exception: {e}"); }
 
-            try
-            {
+            try {
                 UpdatePlayerConfigSettings(File.ReadAllText(ValConfig.playerSettingsPath));
+            } catch (Exception e) {
+                Jotunn.Logger.LogWarning($"There was an error updating the player choice configs, defaults will be used. Exception: {e}");
             }
-            catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the player choice configs, defaults will be used. Exception: {e}"); }
         }
 
         [HarmonyPatch(typeof(Player))]
         public static class SetupPlayerDeathlink
         {
             [HarmonyPostfix]
-            [HarmonyPatch(nameof(Player.OnSpawned))]
-            static void Postfix(Player __instance)
-            {
-                CheckAndSetPlayerDeathConfig();
+            [HarmonyPatch(nameof(Player.Load))]
+            static void Postfix(Player __instance) {
+                CheckAndSetPlayerDeathConfig(__instance);
             }
         }
 
-        public static void CheckAndSetPlayerDeathConfig() {
-            Player player = Player.m_localPlayer;
-            if (ValConfig.UsePrivateKeysForDeathChoice.Value && player != null) {
+        public static void CheckAndSetPlayerDeathConfig(Player player) {
+            if (ValConfig.UsePrivateKeysForDeathChoice.Value) {
                 Logger.LogDebug($"Checking private keys configurations for Deathlink");
                 if (player.PlayerHasUniqueKey(DeathChoiceKey)) {
                     player.TryGetUniqueKeyValue(DeathChoiceKey, out string selectedDeathConfig);
@@ -141,12 +140,8 @@ namespace Deathlink.Common
                         Logger.LogDebug("Player preference setting is not an available config, removing player choice.");
                         player.PlayerRemoveUniqueKey(DeathChoiceKey);
                         // restart the check
-                        CheckAndSetPlayerDeathConfig();
+                        CheckAndSetPlayerDeathConfig(player);
                     }
-                } else {
-                    // Fallback check for yaml
-                    Logger.LogDebug("No private key set for deathlink configuration, checking yaml config fallback");
-                    CheckYamlConfig();
                 }
             } else {
                 CheckYamlConfig();

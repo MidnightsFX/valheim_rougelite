@@ -96,7 +96,7 @@ namespace Deathlink.Death
                 }
                 DeathConfigurationData.playerSettings.Add(playerID, new DeathConfiguration(){ DeathChoiceLevel = selectedDeathChoice });
                 Player.m_localPlayer.AddUniqueKeyValue(DeathChoiceKey, selectedDeathChoice);
-                DeathConfigurationData.CheckAndSetPlayerDeathConfig();
+                DeathConfigurationData.CheckAndSetPlayerDeathConfig(Player.m_localPlayer);
                 DeathConfigurationData.WritePlayerChoices();
                 Hide();
             }
