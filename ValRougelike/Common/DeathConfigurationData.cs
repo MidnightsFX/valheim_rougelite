@@ -131,6 +131,13 @@ namespace Deathlink.Common
         public static void CheckAndSetPlayerDeathConfig(Player player) {
             if (ValConfig.UsePrivateKeysForDeathChoice.Value) {
                 Logger.LogDebug($"Checking private keys configurations for Deathlink");
+                if (!player.PlayerHasUniqueKey(DeathChoiceKey)) {
+                    string defaultChoice = GetValidDefaultChoiceKey();
+                    if (defaultChoice != null) {
+                        Logger.LogInfo($"No stored Deathlink choice, assigning configured default '{defaultChoice}'.");
+                        player.AddUniqueKeyValue(DeathChoiceKey, defaultChoice);
+                    }
+                }
                 if (player.PlayerHasUniqueKey(DeathChoiceKey)) {
                     player.TryGetUniqueKeyValue(DeathChoiceKey, out string selectedDeathConfig);
                     if (DeathLevels.ContainsKey(selectedDeathConfig)) {
@@ -168,6 +175,14 @@ namespace Deathlink.Common
                     Logger.LogDebug("Player preference setting is not an available config, using fallback");
                     playerDeathConfiguration = DeathLevels.First().Value;
                 }
+            } else {
+                string defaultChoice = GetValidDefaultChoiceKey();
+                if (defaultChoice != null) {
+                    Logger.LogInfo($"No stored Deathlink choice for {playerID}, assigning configured default '{defaultChoice}'.");
+                    playerSettings.Add(playerID, new DeathConfiguration() { DeathChoiceLevel = defaultChoice });
+                    playerDeathConfiguration = DeathLevels[defaultChoice];
+                    WritePlayerChoices();
+                }
             }
         }
 
@@ -189,6 +204,66 @@ namespace Deathlink.Common
         public static void WritePlayerChoices()
         {
             File.WriteAllText(ValConfig.playerSettingsPath, yamlserializer.Serialize(playerSettings));
+        }
+
+        /// <summary>
+        /// Returns the configured default death choice key if it is set and matches a known
+        /// death level, otherwise null (meaning the selection popup should be used).
+        /// </summary>
+        public static string GetValidDefaultChoiceKey()
+        {
+            string configured = ValConfig.DefaultDeathChoice.Value;
+            if (string.IsNullOrEmpty(configured)) { return null; }
+            if (DeathLevels.ContainsKey(configured)) { return configured; }
+            Logger.LogWarning($"Configured DefaultDeathChoice '{configured}' is not a known death choice, the selection popup will be used instead.");
+            return null;
+        }
+
+        /// <summary>
+        /// How many times the player has already changed their death choice from the compendium.
+        /// </summary>
+        public static int GetPlayerChangesUsed(Player player)
+        {
+            if (player == null) { return 0; }
+            if (ValConfig.UsePrivateKeysForDeathChoice.Value) {
+                if (player.TryGetUniqueKeyValue(DeathChoiceChangesKey, out string raw) && int.TryParse(raw, out int used)) {
+                    return used;
+                }
+                return 0;
+            }
+            long playerID = player.GetPlayerID();
+            if (playerSettings.ContainsKey(playerID)) { return playerSettings[playerID].ChangesUsed; }
+            return 0;
+        }
+
+        /// <summary>
+        /// Records that the player has used one of their allowed death choice changes.
+        /// </summary>
+        public static void IncrementPlayerChangesUsed(Player player)
+        {
+            if (player == null) { return; }
+            int used = GetPlayerChangesUsed(player) + 1;
+            if (ValConfig.UsePrivateKeysForDeathChoice.Value) {
+                player.PlayerRemoveUniqueKey(DeathChoiceChangesKey);
+                player.AddUniqueKeyValue(DeathChoiceChangesKey, used.ToString());
+            } else {
+                long playerID = player.GetPlayerID();
+                if (playerSettings.ContainsKey(playerID)) {
+                    playerSettings[playerID].ChangesUsed = used;
+                } else {
+                    playerSettings.Add(playerID, new DeathConfiguration() { ChangesUsed = used });
+                }
+                WritePlayerChoices();
+            }
+        }
+
+        /// <summary>
+        /// True when the player still has at least one death choice change available.
+        /// </summary>
+        public static bool PlayerCanChangeChoice(Player player)
+        {
+            if (player == null) { return false; }
+            return GetPlayerChangesUsed(player) < ValConfig.AllowedDeathChoiceChanges.Value;
         }
 
         public static void UpdateDeathLevelsConfig(string rawyaml) {

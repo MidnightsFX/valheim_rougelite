@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using Deathlink.Death;
 using Jotunn;
 using Jotunn.Entities;
 using Jotunn.Managers;
@@ -22,6 +23,8 @@ public class ValConfig
     public static ConfigEntry<float> SkillGainOnBuilding;
     public static ConfigEntry<bool> ShowDeathMapMarker;
     public static ConfigEntry<bool> UsePrivateKeysForDeathChoice;
+    public static ConfigEntry<string> DefaultDeathChoice;
+    public static ConfigEntry<int> AllowedDeathChoiceChanges;
     //public static ConfigEntry<bool> EffectRemovalOnDeath;
     public static ConfigEntry<bool> EnableAlmanacClassesXPLossOnDeath;
     public static ConfigEntry<float> AlmanacClassesXPLossScale;
@@ -29,12 +32,16 @@ public class ValConfig
     public static ConfigEntry<bool> EnableWackyMMOXPLossOnDeath;
     public static ConfigEntry<float> WackyMMOXPLossScale;
     public static ConfigEntry<float> WackyMMOXPGainScale;
+    public static ConfigEntry<bool> EnableLeaderboard;
+    public static ConfigEntry<float> LeaderboardSyncInterval;
 
     const string cfgFolder = "Deathlink";
     const string deathChoicesCfg = "DeathChoices.yaml";
     const string deathSettingsCfg = "CharacterSettings.yaml";
+    const string leaderboardCfg = "leaderboard.yaml";
     internal static String deathChoicesPath = Path.Combine(Paths.ConfigPath, cfgFolder, deathChoicesCfg);
     internal static String playerSettingsPath = Path.Combine(Paths.ConfigPath, cfgFolder, deathSettingsCfg);
+    internal static String leaderboardPath = Path.Combine(Paths.ConfigPath, cfgFolder, leaderboardCfg);
 
     private static CustomRPC deathChoiceRPC;
     private static CustomRPC characterSettingRPC;
@@ -67,6 +74,8 @@ public class ValConfig
 
         SynchronizationManager.Instance.AddInitialSynchronization(deathChoiceRPC, SendDeathChoices);
         SynchronizationManager.Instance.AddInitialSynchronization(characterSettingRPC, SendCharSettings);
+
+        LeaderboardData.SetupRPC();
     }
 
     // Create Configuration and load it.
@@ -86,12 +95,18 @@ public class ValConfig
 
         UsePrivateKeysForDeathChoice = BindServerConfig("Config", "UsePrivateKeysForDeathChoice", true, "If true, death configuration is stored and checked as a private key on the player. Key value is synced when connecting to a server. False uses the yaml configuration flatfile.", advanced: true);
 
+        DefaultDeathChoice = BindServerConfig("Config", "DefaultDeathChoice", "", "Death choice key (eg. Vanilla, Rougelike1) that new players are automatically assigned the first time they join, skipping the selection popup. Leave empty to show the selection popup instead.");
+        AllowedDeathChoiceChanges = BindServerConfig("Config", "AllowedDeathChoiceChanges", 1, "How many times a player may change their Deathlink choice from the compendium. 0 disables the change button.", valmin: 0, valmax: 10);
+
         EnableAlmanacClassesXPLossOnDeath = BindServerConfig("ModIntegrations", "EnableAlmanacClassesXPLossOnDeath", true, "If true, XP loss also happens for characters Alamanc Class level.");
         AlmanacClassesXPLossScale = BindServerConfig("ModIntegrations", "AlmanacClassesXPLossScale", 1.0f, "How strong the XP loss for Almanac is, lower = less XP loss, higher = more XP loss.");
         AlmanacClassesXPGainScale = BindServerConfig("ModIntegrations", "AlmanacClassesXPGainScale", 20f, "How much Almanac Classes XP is gained based on Deathlink actions. This is gained at an inregular interval based on deathlink skill gains.");
         EnableWackyMMOXPLossOnDeath = BindServerConfig("ModIntegrations", "EnableWackyMMOXPLossOnDeath", true, "If true, XP loss also happens for characters WackyMMO level.");
         WackyMMOXPLossScale = BindServerConfig("ModIntegrations", "WackyMMOXPLossScale", 1.0f, "How strong the XP loss for WackyMMO is, lower = less XP loss, higher = more XP loss.");
         WackyMMOXPGainScale = BindServerConfig("ModIntegrations", "WackyMMOXPGainScale", 1.0f, "How strong the XP gain for WackyMMO is, lower = less XP gain, higher = more XP gain.");
+
+        EnableLeaderboard = BindServerConfig("Leaderboard", "EnableLeaderboard", true, "Whether the server-tracked leaderboard (shown in the Trophies tab) is enabled.");
+        LeaderboardSyncInterval = BindServerConfig("Leaderboard", "LeaderboardSyncInterval", 30f, "How often (in minutes) clients report their stats to the server and the server broadcasts the leaderboard back to clients.", false, 5f, 120f);
 
         // Debugmode
         EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
@@ -277,6 +292,7 @@ public class ValConfig
     {
         Logger.LogInfo("Reset requested for local players death choice.");
         Player.m_localPlayer.PlayerRemoveUniqueKey(DataObjects.DeathChoiceKey);
+        Player.m_localPlayer.PlayerRemoveUniqueKey(DataObjects.DeathChoiceChangesKey);
 
         yield return null;
     }

@@ -29,7 +29,7 @@ namespace Deathlink.Death
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Hide))]
         public static class HideDeathChoiceUI {
             public static void Postfix(InventoryGui __instance) {
-                DeathChoiceUI.Instance.Hide();
+                if (DeathChoiceUI.IsInitialized) { DeathChoiceUI.Instance.Hide(); }
             }
         }
         
@@ -40,8 +40,18 @@ namespace Deathlink.Death
 
         public class DeathChoiceUI : MonoBehaviour
         {
-            public static DeathChoiceUI Instance => _instance ??= new DeathChoiceUI();
+            public static DeathChoiceUI Instance {
+                get {
+                    if (_instance == null) {
+                        GameObject holder = new GameObject("DeathlinkDeathChoiceUI");
+                        DontDestroyOnLoad(holder);
+                        _instance = holder.AddComponent<DeathChoiceUI>(); // AddComponent triggers Awake
+                    }
+                    return _instance;
+                }
+            }
             private static DeathChoiceUI _instance;
+            public static bool IsInitialized => _instance != null;
 
             private static GameObject DeathChoicePanel;
             private static GameObject ChoicesScrollView;
@@ -57,19 +67,30 @@ namespace Deathlink.Death
             private static List<Toggle> difficultyToggles = new List<Toggle>();
             private static ToggleGroup choiceGroup;
             private static string selectedDeathChoice = "none";
+            // True when the panel was opened from the compendium "change my choice" button,
+            // which consumes one of the player's allowed changes on selection.
+            private static bool isChangeMode = false;
 
             public void Awake()
             {
+                _instance = this;
                 CreateStaticUIObjects();
                 SetChoiceList();
-                //SetupListeners();
             }
 
             public void Show() {
                 if (DeathChoicePanel == null) {
                     CreateStaticUIObjects();
+                    SetChoiceList();
                 }
                 DeathChoicePanel.SetActive(true);
+            }
+
+            // Opens the selection panel as a one-time change initiated by the player. Selecting a
+            // choice from here consumes one of the player's allowed changes.
+            public void ShowForChange() {
+                isChangeMode = true;
+                Show();
             }
 
             public void Hide() {
@@ -77,6 +98,7 @@ namespace Deathlink.Death
                 if (DeathChoicePanel != null) {
                     DeathChoicePanel.SetActive(false);
                 }
+                isChangeMode = false;
                 GUIManager.BlockInput(false);
             }
 
@@ -91,11 +113,18 @@ namespace Deathlink.Death
                 }
                 Logger.LogDebug($"Player selected death type {selectedDeathChoice}");
                 long playerID = Player.m_localPlayer.GetPlayerID();
+                // Update the stored choice in place so an existing change counter is preserved.
                 if (DeathConfigurationData.playerSettings.ContainsKey(playerID)) {
-                    DeathConfigurationData.playerSettings.Remove(playerID);
+                    DeathConfigurationData.playerSettings[playerID].DeathChoiceLevel = selectedDeathChoice;
+                } else {
+                    DeathConfigurationData.playerSettings.Add(playerID, new DeathConfiguration() { DeathChoiceLevel = selectedDeathChoice });
                 }
-                DeathConfigurationData.playerSettings.Add(playerID, new DeathConfiguration(){ DeathChoiceLevel = selectedDeathChoice });
+                // Replace any existing key so a changed choice overwrites the previous value.
+                Player.m_localPlayer.PlayerRemoveUniqueKey(DeathChoiceKey);
                 Player.m_localPlayer.AddUniqueKeyValue(DeathChoiceKey, selectedDeathChoice);
+                if (isChangeMode) {
+                    DeathConfigurationData.IncrementPlayerChangesUsed(Player.m_localPlayer);
+                }
                 DeathConfigurationData.CheckAndSetPlayerDeathConfig(Player.m_localPlayer);
                 DeathConfigurationData.WritePlayerChoices();
                 Hide();

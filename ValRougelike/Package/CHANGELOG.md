@@ -1,3 +1,13 @@
+  **0.9.1**
+---
+```
+- Adds a server-tracked leaderboard, shown in the Compendium, with Survival, Combat and Gathering views
+- Leaderboard data is persisted on the server and synced to clients every 30 minutes (configurable)
+- Note: total damage tracking is approximate in multiplayer (counts damage processed on the attacker's client)
+- Adds a configuration to set the default deathlink choice for players (removes the players choice)
+- Also added 1 (configurable) chance to reset deathlink choice from the compendium
+```
+
   **0.8.7**
 ---
 ```

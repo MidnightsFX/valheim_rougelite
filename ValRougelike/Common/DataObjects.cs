@@ -16,6 +16,18 @@ public class DataObjects
     public static ISerializer yamlserializer = new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).DisableAliases().ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults).Build();
 
     public static readonly string DeathChoiceKey = "DL_DeathChoice";
+    // Tracks how many times a player has changed their death choice. Distinct prefix from
+    // DeathChoiceKey so PlayerHasUniqueKey's StartsWith check doesn't cross-match.
+    public static readonly string DeathChoiceChangesKey = "DL_ChoiceChanges";
+
+    // Leaderboard per-character accumulators, persisted as player unique keys so they survive
+    // relogs independently of the server sync timer. Prefixes are distinct so PlayerHasUniqueKey's
+    // StartsWith check never cross-matches between them (or with the death choice keys above).
+    public static readonly string LeaderboardFirstLifeKey = "DL_LBFirst";
+    public static readonly string LeaderboardLongestLifeKey = "DL_LBLongest";
+    public static readonly string LeaderboardTotalLifeKey = "DL_LBTotal";
+    public static readonly string LeaderboardDeathCountKey = "DL_LBDeaths";
+    public static readonly string LeaderboardDamageKey = "DL_LBDamage";
     public enum ItemLossStyle
     {
         None,
@@ -297,10 +309,38 @@ public class DataObjects
     public class DeathConfiguration
     {
         public string DeathChoiceLevel { get; set; }
+        public int ChangesUsed { get; set; }
     }
 
     public class PlayerDeathConfiguration {
         public Dictionary<long, DeathConfiguration> selectedDeathStyle { get; set; }
+    }
+
+    // One player's all-time leaderboard stats. Serialized to leaderboard.yaml on the server and
+    // sent over the wire (the whole board server->client, a single entry client->server).
+    public class LeaderboardEntry
+    {
+        public long PlayerID { get; set; }
+        public string PlayerName { get; set; }
+        public string DeathChoice { get; set; }
+
+        // Survival, stored in seconds of played time alive; the UI renders these as minutes.
+        public float FirstLifeSeconds { get; set; }
+        public float LongestLifeSeconds { get; set; }
+        public float TotalLifeSeconds { get; set; }
+        public int DeathCount { get; set; }
+
+        // Combat
+        public float TotalDamage { get; set; }
+        public int BossKills { get; set; }
+
+        // Gathering
+        public int TreeChops { get; set; }
+        public int Mines { get; set; }
+        public int CraftsAndBuilds { get; set; }
+
+        // Average played time alive per completed life, in seconds.
+        public float AverageLifeSeconds => DeathCount > 0 ? TotalLifeSeconds / DeathCount : 0f;
     }
 
     public abstract class ZNetProperty<T>
