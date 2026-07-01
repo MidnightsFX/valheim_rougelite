@@ -51,6 +51,8 @@ namespace Deathlink.Common
             {
                 "Rougelike3", new DeathChoiceLevel() {
                     DisplayName = "Berserker",
+                    DamageTakenModifier = 1.15f,
+                    DamageDoneModifier = 1.1f,
                     DeathStyle = new DeathProgressionDetails() { itemLossStyle = ItemLossStyle.DeathlinkBased, itemSavedStyle = ItemSavedStyle.OnCharacter, minEquipmentKept = 0, maxEquipmentKept = 3, minSkillLossPercentage = 0.05f, maxSkillLossPercentage = 0.2f },
                     DeathLootModifiers = new Dictionary<string, DeathLootModifier>() {
                         { "AmberPearl", new DeathLootModifier() { chance = 0.05f, prefab = "AmberPearl", bonusActions = new List<ResourceGainTypes>() { ResourceGainTypes.Kills } } }
@@ -67,6 +69,8 @@ namespace Deathlink.Common
             {
                 "Hardcore", new DeathChoiceLevel() {
                     DisplayName = "Deathbringer",
+                    DamageTakenModifier = 1.25f,
+                    DamageDoneModifier = 1.15f,
                     DeathStyle = new DeathProgressionDetails() { itemLossStyle = ItemLossStyle.DestroyAll, minSkillLossPercentage = 0.05f, maxSkillLossPercentage = 0.25f },
                     DeathLootModifiers = new Dictionary<string, DeathLootModifier>() {
                         { "AmberPearl", new DeathLootModifier() { chance = 0.05f, prefab = "AmberPearl", bonusActions = new List<ResourceGainTypes>() { ResourceGainTypes.Kills } } },
@@ -153,6 +157,51 @@ namespace Deathlink.Common
             } else {
                 CheckYamlConfig();
             }
+            // Push the resolved damage multipliers onto the player's networked ZDO so every
+            // client can read them when applying combat damage (see DamageModifiers).
+            StoreDamageModifiersOnPlayer(player);
+        }
+
+        /// <summary>
+        /// Persists the local player's damage take/deal multipliers onto their character ZDO.
+        /// The player owns their own ZDO, so this replicates to every other client and lets the
+        /// machine that owns a hit's target look up the correct multiplier for both the attacker
+        /// and the target. Always written (even when 1f) so switching to a choice without a
+        /// modifier overwrites any stale value from a previous choice.
+        /// </summary>
+        public static void StoreDamageModifiersOnPlayer(Player player) {
+            if (player == null) { return; }
+            ZNetView nview = player.m_nview;
+            if (nview == null || !nview.IsValid()) { return; }
+            ZDO zdo = nview.GetZDO();
+            if (zdo == null) { return; }
+            zdo.Set(DamageTakenModifierKey, playerDeathConfiguration.DamageTakenModifier);
+            zdo.Set(DamageDoneModifierKey, playerDeathConfiguration.DamageDoneModifier);
+            Logger.LogDebug($"Stored damage modifiers on player ZDO: taken {playerDeathConfiguration.DamageTakenModifier}, done {playerDeathConfiguration.DamageDoneModifier}");
+        }
+
+        /// <summary>
+        /// Clears the local player's stored death choice (and change counter) and re-applies the
+        /// resolved configuration immediately so an admin reset takes effect without a relog. Reverts
+        /// the in-memory config to a clean baseline first so a reset with no configured default falls
+        /// back to Vanilla instead of leaving the previous choice's penalties/damage modifiers active.
+        /// When no default is configured the player is left without a choice key, so the selection
+        /// popup re-appears on the next inventory open.
+        /// </summary>
+        public static void ResetLocalPlayerChoice() {
+            Player player = Player.m_localPlayer;
+            if (player == null) {
+                Logger.LogWarning("Cannot reset death choice, local player is not set.");
+                return;
+            }
+            player.PlayerRemoveUniqueKey(DeathChoiceKey);
+            player.PlayerRemoveUniqueKey(DeathChoiceChangesKey);
+            // Drop the previous choice so CheckAndSetPlayerDeathConfig can't re-store stale modifiers.
+            playerDeathConfiguration = DeathLevels.First().Value;
+            // Reapplies any configured default and rewrites the networked damage modifiers.
+            CheckAndSetPlayerDeathConfig(player);
+            WritePlayerChoices();
+            Logger.LogInfo("Local player's death choice has been reset.");
         }
 
         internal static void CheckYamlConfig() {

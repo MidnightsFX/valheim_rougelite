@@ -38,6 +38,12 @@ namespace Deathlink.Death
                 sb.AppendLine(deathlinkPlayerSettings.GetDeathStyleDescription());
                 sb.AppendLine();
 
+                if (deathlinkPlayerSettings.DamageTakenModifier != 1f || deathlinkPlayerSettings.DamageDoneModifier != 1f) {
+                    sb.AppendLine($"<size=30><b>Combat Modifiers</b></size>");
+                    sb.AppendLine(deathlinkPlayerSettings.GetDamageModifierDescription());
+                    sb.AppendLine();
+                }
+
                 if (deathlinkPlayerSettings.SkillModifiers.Count > 0) {
                     sb.AppendLine($"<size=30><b>Skill Modifiers</b></size>");
                     sb.AppendLine(deathlinkPlayerSettings.GetSkillModiferDescription());

@@ -20,6 +20,13 @@ public class DataObjects
     // DeathChoiceKey so PlayerHasUniqueKey's StartsWith check doesn't cross-match.
     public static readonly string DeathChoiceChangesKey = "DL_ChoiceChanges";
 
+    // Damage take/deal multipliers for the player's selected death choice, written onto their
+    // own character ZDO so any client that processes a hit (as attacker or target) can read the
+    // networked value and apply the correct multiplier. This keeps damage scaling consistent in
+    // multiplayer no matter which machine owns the target.
+    public static readonly string DamageTakenModifierKey = "DL_DmgTaken";
+    public static readonly string DamageDoneModifierKey = "DL_DmgDone";
+
     // Leaderboard per-character accumulators, persisted as player unique keys so they survive
     // relogs independently of the server sync timer. Prefixes are distinct so PlayerHasUniqueKey's
     // StartsWith check never cross-matches between them (or with the death choice keys above).
@@ -111,6 +118,8 @@ public class DataObjects
         public string DisplayName { get; set; }
         public DeathProgressionDetails DeathStyle { get; set; }
         public float DeathSkillRate { get; set; } = 1f;
+        public float DamageTakenModifier { get; set; } = 1f;
+        public float DamageDoneModifier { get; set; } = 1f;
         public Dictionary<string, DeathResourceModifier> ResourceModifiers { get; set; }
         public Dictionary<string, DeathSkillModifier> SkillModifiers { get; set; }
         public Dictionary<string, DeathLootModifier> DeathLootModifiers { get; set; }
@@ -248,9 +257,28 @@ public class DataObjects
             return sb.ToString();
         }
 
+        public string GetDamageModifierDescription() {
+            StringBuilder sb = new StringBuilder();
+            if (DamageTakenModifier != 1f) {
+                if (DamageTakenModifier > 1f) {
+                    sb.AppendLine(Localization.instance.Localize($"$damage_taken +<color={color_bad}>{Mathf.Round((DamageTakenModifier - 1f) * 100)}%</color>"));
+                } else {
+                    sb.AppendLine(Localization.instance.Localize($"$damage_taken -<color={color_good}>{Mathf.Round((1f - DamageTakenModifier) * 100)}%</color>"));
+                }
+            }
+            if (DamageDoneModifier != 1f) {
+                if (DamageDoneModifier > 1f) {
+                    sb.AppendLine(Localization.instance.Localize($"$damage_dealt +<color={color_good}>{Mathf.Round((DamageDoneModifier - 1f) * 100)}%</color>"));
+                } else {
+                    sb.AppendLine(Localization.instance.Localize($"$damage_dealt -<color={color_bad}>{Mathf.Round((1f - DamageDoneModifier) * 100)}%</color>"));
+                }
+            }
+            return sb.ToString();
+        }
+
         public string GetDeathStyleDescription() {
             StringBuilder sb = new StringBuilder();
-            
+
             switch (DeathStyle.itemLossStyle)
             {
                 case ItemLossStyle.None:

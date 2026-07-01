@@ -281,9 +281,17 @@ public class ValConfig
 
         Logger.LogInfo($"Reset requested for platform ID {platformID} (charID: {charID}, peerUID: {targetPeerUID}), local platform ID: {localPlayerPlatformId}.");
 
-        ZPackage fwdPackage = new ZPackage();
-        fwdPackage.Write(platformID);
-        resetChoiceRPC.SendPackage(targetPeerUID, fwdPackage);
+        if (!string.IsNullOrEmpty(localPlayerPlatformId) && localPlayerPlatformId == platformID) {
+            // The reset target is the host's own local player. The host is not a remote peer, so
+            // there is nothing to forward to; apply the reset directly on this machine.
+            DeathConfigurationData.ResetLocalPlayerChoice();
+        } else if (targetPeerUID != 0L) {
+            ZPackage fwdPackage = new ZPackage();
+            fwdPackage.Write(platformID);
+            resetChoiceRPC.SendPackage(targetPeerUID, fwdPackage);
+        } else {
+            Logger.LogWarning($"No connected target found for platform ID {platformID}; reset was not delivered to any client.");
+        }
 
         yield return null;
     }
@@ -291,8 +299,7 @@ public class ValConfig
     private static IEnumerator OnClientRecieveResetRPC(long sender, ZPackage package)
     {
         Logger.LogInfo("Reset requested for local players death choice.");
-        Player.m_localPlayer.PlayerRemoveUniqueKey(DataObjects.DeathChoiceKey);
-        Player.m_localPlayer.PlayerRemoveUniqueKey(DataObjects.DeathChoiceChangesKey);
+        DeathConfigurationData.ResetLocalPlayerChoice();
 
         yield return null;
     }

@@ -1,3 +1,11 @@
+  **0.9.2**
+---
+```
+- Adds per death choice damage taken/done configuration
+	- This allows players having unique damage amplification or reduction based on their death choice
+	- Player A could take 25% more damage while player B could take 5% less damage, both on the same server
+```
+
   **0.9.1**
 ---
 ```

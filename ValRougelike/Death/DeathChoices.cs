@@ -60,6 +60,7 @@ namespace Deathlink.Death
             private static GameObject manualCloseButton;
             private static GameObject selectChoiceButton;
             private static Text DeathPenaltyDescription;
+            private static Text CombatModifiersDescription;
             private static Text XPModifiersDescription;
             private static Text LootModifersDescription;
             private static Text HarvestModifiersDescription;
@@ -151,6 +152,8 @@ namespace Deathlink.Death
                         //Logger.LogDebug("Setting up onclock");
                         DeathPenaltyDescription.GetComponent<Text>().text = entry.Value.GetDeathStyleDescription();
                         //Logger.LogDebug("Set death description");
+                        CombatModifiersDescription.GetComponent<Text>().text = entry.Value.GetDamageModifierDescription();
+                        //Logger.LogDebug("Set combat mod");
                         XPModifiersDescription.GetComponent<Text>().text = entry.Value.GetSkillModiferDescription();
                         //Logger.LogDebug("Set xp mod");
                         LootModifersDescription.GetComponent<Text>().text = entry.Value.GetLootModifiersDescription();
@@ -181,7 +184,7 @@ namespace Deathlink.Death
                     anchorMax: new Vector2(0.5f, 0.5f),
                     position: new Vector2(0, 0),
                     width: 800,
-                    height: 800,
+                    height: 960,
                     draggable: true);
                 // Hide it right away
                 DeathChoicePanel.SetActive(false);
@@ -191,7 +194,7 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(50f, 360f),
+                    position: new Vector2(50f, 430f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 30,
                     color: GUIManager.Instance.ValheimOrange,
@@ -207,7 +210,7 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(0f, 315f),
+                    position: new Vector2(0f, 380f),
                     font: GUIManager.Instance.AveriaSerif,
                     fontSize: 20,
                     color: Color.white,
@@ -226,7 +229,7 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(360f, 360f),
+                    position: new Vector2(360f, 430f),
                     width: 60f,
                     height: 60f);
                 Button bclose = manualCloseButton.GetComponent<Button>();
@@ -239,7 +242,7 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(100f, 220f),
+                    position: new Vector2(100f, 330f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 22,
                     color: GUIManager.Instance.ValheimOrange,
@@ -255,20 +258,55 @@ namespace Deathlink.Death
                     parent: DeathChoicePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(150f, 110f),
+                    position: new Vector2(147f, 240f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 18,
                     color: Color.white,
                     outline: true,
                     outlineColor: Color.black,
-                    width: 500f,
-                    height: 200f,
+                    width: 490f,
+                    height: 160f,
                     addContentSizeFitter: false);
                 deathpenalty.name = "DeathPenaltyDesc";
                 DeathPenaltyDescription = deathpenalty.GetComponent<Text>();
                 DeathPenaltyDescription.resizeTextForBestFit = true;
                 DeathPenaltyDescription.resizeTextMaxSize = 18;
                 //DeathPenaltyDescription.verticalOverflow = VerticalWrapMode.Overflow;
+
+                var combatTitle = GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$combat_header"),
+                    parent: DeathChoicePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(100f, 150f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 22,
+                    color: GUIManager.Instance.ValheimOrange,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 400f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                combatTitle.name = "combatModifiersTitle";
+
+                var combatMod = GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$combat_modifier_description"),
+                    parent: DeathChoicePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(150f, 80f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: Color.white,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 500f,
+                    height: 100f,
+                    addContentSizeFitter: false);
+                combatMod.name = "combatModifiersDesc";
+                CombatModifiersDescription = combatMod.GetComponent<Text>();
+                CombatModifiersDescription.resizeTextForBestFit = true;
+                CombatModifiersDescription.resizeTextMaxSize = 18;
 
                 var xpTitle = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$xp_header"),
